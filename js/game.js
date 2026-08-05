@@ -140,19 +140,21 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
 
   chip.innerText = `${word.toUpperCase()} (${label})`;
   document.getElementById('played-words').appendChild(chip);
-
-  if (wordsPlayedOnCard >= MAX_WORDS) {
+if (wordsPlayedOnCard >= MAX_WORDS) {
     if (!connection || !connection.open) bot.stopThinking();
     setTimeout(() => {
-      if (typeof isHost !== 'undefined' && isHost) {
-        const categories = Object.keys(DICTIONARY);
-        currentCategory = categories[Math.floor(Math.random() * categories.length)];
+      // Genera sempre una nuova categoria localmente
+      const categories = Object.keys(DICTIONARY);
+      currentCategory = categories[Math.floor(Math.random() * categories.length)];
+      
+      // Se siamo in multiplayer e siamo l'host, invia il cambio all'avversario
+      if (typeof isHost !== 'undefined' && isHost && connection && connection.open) {
         sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
       }
+      
       nextCategoryCard();
     }, 1200);
   }
-}
 
 function processPlayerWord(typedWord) {
   const errorMsg = document.getElementById('error-msg');
