@@ -7,7 +7,16 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<!-- Libreria PeerJS per Multiplayer P2P -->
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
+<!-- Pannello Connessione Multiplayer -->
+<div id="multiplayer-panel" style="background: #202024; padding: 15px; margin-bottom: 20px; border-radius: 8px;">
+  <button id="btn-create" onclick="createRoom()">Crea Partita (Host)</button>
+  <input type="text" id="room-code-input" placeholder="Codice Stanza..." style="padding: 8px; width: 150px;">
+  <button id="btn-join" onclick="joinRoom()">Unisciti</button>
+  <p id="connection-status" style="margin-top: 10px; color: #f39c12; font-weight: bold;"></p>
+</div>
   <header>
     <h1>⚡ WORD BLITZ ⚡</h1>
     <div id="status-bar">
