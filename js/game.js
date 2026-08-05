@@ -128,12 +128,14 @@ function renderHand() {
 }
 
 function registerWordPlay(word, isPlayer = true, customName = null) {
+  // Evita di registrare due volte la stessa parola se arriva via rete
   wordsPlayedOnCard++;
   document.getElementById('words-count').innerText = wordsPlayedOnCard;
 
   const chip = document.createElement('div');
   chip.className = 'played-chip';
-  let label = isPlayer ? "TU" : "BOT";
+  
+  let label = isPlayer ? "TU" : "AVVERSARIO";
   if (customName) label = customName;
 
   chip.innerText = `${word.toUpperCase()} (${label})`;
@@ -143,7 +145,8 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
     if (!connection || !connection.open) bot.stopThinking();
     setTimeout(() => {
       if (typeof isHost !== 'undefined' && isHost) {
-        pickRandomCategory();
+        const categories = Object.keys(DICTIONARY);
+        currentCategory = categories[Math.floor(Math.random() * categories.length)];
         sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
       }
       nextCategoryCard();
@@ -151,6 +154,46 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
   }
 }
 
+function processPlayerWord(typedWord) {
+  const errorMsg = document.getElementById('error-msg');
+  if (errorMsg) errorMsg.innerText = "";
+
+  if (!typedWord) return;
+  if (wordsPlayedOnCard >= MAX_WORDS) return;
+
+  const firstLetter = typedWord.charAt(0);
+  const cardIndex = playerHand.findIndex(card => card.letter === firstLetter);
+
+  if (cardIndex === -1) {
+    if (errorMsg) errorMsg.innerText = `Non hai la lettera "${firstLetter}" in mano!`;
+    return;
+  }
+
+  if (!validateWord(currentCategory, typedWord)) {
+    assignPenaltyCard(`"${typedWord}" non valida!`);
+    return;
+  }
+
+  // Rimuovi la carta dalla mano locale
+  playerHand.splice(cardIndex, 1);
+  renderHand();
+  
+  // Registra sul proprio schermo come "TU"
+  registerWordPlay(typedWord, true);
+
+  // Invia all'amico specificando che per lui sei l'avversario
+  if (typeof sendData === 'function') {
+    sendData({ type: 'PLAY_WORD', word: typedWord });
+  }
+
+  if (playerHand.length === 0) {
+    if (!connection || !connection.open) bot.stopThinking();
+    setTimeout(() => {
+      alert("HAI SVUOTATO LA MANO! Fine della manche.");
+      endRoundAndCountLightnings();
+    }, 500);
+  }
+}
 function handleBotPlay(card, word) {
   if (wordsPlayedOnCard >= MAX_WORDS) return;
   bot.hand = bot.hand.filter(c => c.id !== card.id);
@@ -182,42 +225,6 @@ function submitTypedWord() {
   processPlayerWord(typedWord);
 }
 
-function processPlayerWord(typedWord) {
-  const errorMsg = document.getElementById('error-msg');
-  if (errorMsg) errorMsg.innerText = "";
-
-  if (!typedWord) return;
-  if (wordsPlayedOnCard >= MAX_WORDS) return;
-
-  const firstLetter = typedWord.charAt(0);
-  const cardIndex = playerHand.findIndex(card => card.letter === firstLetter);
-
-  if (cardIndex === -1) {
-    if (errorMsg) errorMsg.innerText = `Non hai la lettera "${firstLetter}"!`;
-    return;
-  }
-
-  if (!validateWord(currentCategory, typedWord)) {
-    assignPenaltyCard(`"${typedWord}" non valida!`);
-    return;
-  }
-
-  playerHand.splice(cardIndex, 1);
-  renderHand();
-  registerWordPlay(typedWord, true);
-
-  if (typeof sendData === 'function') {
-    sendData({ type: 'PLAY_WORD', word: typedWord });
-  }
-
-  if (playerHand.length === 0) {
-    if (!connection || !connection.open) bot.stopThinking();
-    setTimeout(() => {
-      alert("HAI SVUOTATO LA MANO! Fine della manche.");
-      endRoundAndCountLightnings();
-    }, 500);
-  }
-}
 
 function endRoundAndCountLightnings() {
   playerHand.forEach(c => playerLightnings += c.lightnings);
