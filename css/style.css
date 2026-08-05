@@ -15,26 +15,40 @@ html, body {
   align-items: center;
   justify-content: flex-start;
   overflow: hidden;
-  padding: 8px 12px;
+  padding: 6px 12px;
 }
 
 #home-screen {
   width: 100%;
-  max-width: 480px;
+  max-width: 500px;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-evenly;
-  padding: 2px 0;
+  justify-content: flex-start;
+  gap: 10px;
+  padding-top: 2px;
 }
 
-/* Allarga e adatta perfettamente il riquadro delle regole */
+#home-screen h1 {
+  color: #f39c12;
+  font-size: 1.5rem;
+  margin-top: 2px;
+}
+
+/* Riquadro regole più grande e spazioso */
 #home-screen > div:nth-of-type(1) {
   width: 100% !important;
   max-width: 100% !important;
-  margin-bottom: 0 !important;
-  padding: 10px 14px !important;
+  padding: 16px 18px !important;
+  font-size: 0.9rem !important;
+  line-height: 1.5 !important;
+}
+
+#home-screen h3 {
+  font-size: 0.95rem;
+  margin-top: 2px;
+  margin-bottom: 2px;
 }
 
 #game-container {
