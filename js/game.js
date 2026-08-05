@@ -37,13 +37,24 @@ const LETTERS_POOL = [
   { letter: 'Z', lightnings: 3 }
 ];
 
-// Avvia la partita in singolo contro il Bot
+// 1. Avvio Modalità Singola (Contro IA)
 function startSinglePlayer() {
+  if (typeof DICTIONARY === 'undefined') {
+    alert("Errore: Il dizionario non è stato caricato correttamente!");
+    return;
+  }
   startGameScreen();
-  initGame();
+  
+  playerHand = drawHand();
+  bot.hand = drawHand();
+  
+  const categories = Object.keys(DICTIONARY);
+  currentCategory = categories[Math.floor(Math.random() * categories.length)];
+  
+  nextCategoryCard();
 }
 
-// Passa dalla schermata iniziale al tavolo di gioco
+// 2. Transizione alla schermata di gioco
 function startGameScreen() {
   document.getElementById('home-screen').style.display = 'none';
   document.getElementById('game-container').style.display = 'block';
@@ -63,15 +74,17 @@ function startGameScreen() {
   }
 }
 
-function initGame() {
-  playerHand = drawHand();
-  if (typeof connection === 'undefined' || !connection) {
-    bot.hand = drawHand();
-  }
+// 3. Avvio Partita in Multiplayer (chiamato da network.js)
+function startMultiplayerGame(initialCategory) {
+  startGameScreen();
   
-  // Seleziona subito la categoria per evitare il blocco
-  const categories = Object.keys(DICTIONARY);
-  currentCategory = categories[Math.floor(Math.random() * categories.length)];
+  playerHand = drawHand();
+  if (initialCategory) {
+    currentCategory = initialCategory;
+  } else {
+    const categories = Object.keys(DICTIONARY);
+    currentCategory = categories[Math.floor(Math.random() * categories.length)];
+  }
   
   nextCategoryCard();
 }
@@ -90,7 +103,7 @@ function nextCategoryCard() {
   document.getElementById('played-words').innerHTML = "";
   document.getElementById('words-count').innerText = wordsPlayedOnCard;
   
-  if (!currentCategory) {
+  if (!currentCategory && typeof DICTIONARY !== 'undefined') {
     const categories = Object.keys(DICTIONARY);
     currentCategory = categories[Math.floor(Math.random() * categories.length)];
   }
