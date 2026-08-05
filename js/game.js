@@ -128,7 +128,7 @@ function assignPenaltyCard(reasonText) {
   errorMsg.innerText = `${reasonText} PENALITÀ: hai ricevuto una carta ${penaltyCard.letter}!`;
 }
 
-// Gestione input parola del giocatore
+// Gestione input tastiera
 const wordInput = document.getElementById('word-input');
 const errorMsg = document.getElementById('error-msg');
 
@@ -136,40 +136,49 @@ wordInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     const typedWord = wordInput.value.trim().toUpperCase();
     wordInput.value = "";
-    errorMsg.innerText = "";
-
-    if (wordsPlayedOnCard >= MAX_WORDS) return;
-
-    // 1. Controllo possesso lettera in mano
-    const firstLetter = typedWord.charAt(0);
-    const cardIndex = playerHand.findIndex(card => card.letter === firstLetter);
-
-    if (cardIndex === -1) {
-      errorMsg.innerText = `Non hai nessuna carta con la lettera "${firstLetter}" in mano!`;
-      return;
-    }
-
-    // 2. Controllo validità parola nel dizionario -> SE NON VALIDA, PENALITÀ CARTA
-    if (!validateWord(currentCategory, typedWord)) {
-      assignPenaltyCard("Parola non valida per questa categoria!");
-      return;
-    }
-
-    // 3. Giocata valida: rimuove la carta e registra parola
-    playerHand.splice(cardIndex, 1);
-    renderHand();
-    registerWordPlay(typedWord, true);
-
-    // Se resti con 0 carte in mano, vinci la manche!
-    if (playerHand.length === 0) {
-      bot.stopThinking();
-      setTimeout(() => {
-        alert("HAI SVUOTATO LA MANO! Fine della manche.");
-        endRoundAndCountLightnings();
-      }, 500);
-    }
+    processPlayerWord(typedWord);
   }
 });
+
+// Funzione unica di controllo parola (condivisa tra tastiera e microfono)
+function processPlayerWord(typedWord) {
+  errorMsg.innerText = "";
+
+  if (wordsPlayedOnCard >= MAX_WORDS) return;
+
+  // 1. Controllo possesso lettera in mano
+  const firstLetter = typedWord.charAt(0);
+  const cardIndex = playerHand.findIndex(card => card.letter === firstLetter);
+
+  if (cardIndex === -1) {
+    errorMsg.innerText = `Non hai nessuna carta con la lettera "${firstLetter}" in mano!`;
+    return;
+  }
+
+  // 2. Controllo validità parola nel dizionario -> SE NON VALIDA, PENALITÀ CARTA
+  if (!validateWord(currentCategory, typedWord)) {
+    assignPenaltyCard(`"${typedWord}" non valida per questa categoria!`);
+    return;
+  }
+
+  // 3. Giocata valida: rimuove la carta, registra la parola e la invia all'amico se sei in multiplayer
+  playerHand.splice(cardIndex, 1);
+  renderHand();
+  registerWordPlay(typedWord, true);
+
+  if (typeof sendData === 'function') {
+    sendData({ type: 'PLAY_WORD', word: typedWord });
+  }
+
+  // Se resti con 0 carte in mano, vinci la manche!
+  if (playerHand.length === 0) {
+    bot.stopThinking();
+    setTimeout(() => {
+      alert("HAI SVUOTATO LA MANO! Fine della manche.");
+      endRoundAndCountLightnings();
+    }, 500);
+  }
+}
 
 // Fine Manche: conta i fulmini delle carte rimaste in mano e controlla i 40 fulmini totali
 function endRoundAndCountLightnings() {
@@ -191,6 +200,7 @@ function endRoundAndCountLightnings() {
     nextCategoryCard();
   }
 }
+
 // Funzione per attivare il riconoscimento vocale
 function startVoiceRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -201,7 +211,7 @@ function startVoiceRecognition() {
   }
 
   const recognition = new SpeechRecognition();
-  recognition.lang = 'it-IT'; // Imposta la lingua italiana
+  recognition.lang = 'it-IT';
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
 
@@ -216,10 +226,7 @@ function startVoiceRecognition() {
     micButton.style.background = '#e74c3c'; // Torna rosso
     document.getElementById('error-msg').innerText = "";
 
-    // Prendi solo la prima parola pronunciata (se dicono una frase)
     const firstWord = spokenWord.split(" ")[0];
-    
-    // Inserisci la parola nel flusso di gioco come se fosse stata digitata
     processPlayerWord(firstWord);
   };
 
@@ -233,4 +240,5 @@ function startVoiceRecognition() {
     micButton.style.background = '#e74c3c';
   };
 }
+
 window.onload = initGame;
