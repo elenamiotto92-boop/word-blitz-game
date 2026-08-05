@@ -60,6 +60,7 @@ function setupDataListener() {
 
   connection.on('data', (data) => {
     if (data.type === 'PLAY_WORD') {
+      // Quando l'amico gioca una parola, sul tuo schermo compare come "AMICO" o nome avversario
       registerWordPlay(data.word, false, isHost ? "AMICO" : "HOST");
     }
 
@@ -71,13 +72,11 @@ function setupDataListener() {
       document.getElementById('words-count').innerText = "0";
     }
 
-    // Ricevuto dall'host: sblocca la schermata anche per l'amico e fa partire il gioco
     if (data.type === 'START_MULTIPLAYER') {
       startMultiplayerGame(data.category);
     }
   });
 }
-
 function sendData(payload) {
   if (connection && connection.open) {
     connection.send(payload);
