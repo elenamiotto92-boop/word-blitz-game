@@ -23,7 +23,11 @@ function createRoom() {
     if (typeof bot !== 'undefined') bot.stopThinking();
 
     setTimeout(() => {
-      startGameScreen();
+      // Host avvia il gioco e manda la categoria iniziale all'amico
+      const categories = Object.keys(DICTIONARY);
+      currentCategory = categories[Math.floor(Math.random() * categories.length)];
+      
+      startMultiplayerGame(currentCategory);
       sendData({ type: 'START_MULTIPLAYER', category: currentCategory });
     }, 1000);
   });
@@ -40,12 +44,8 @@ function joinRoom() {
     connection = peer.connect(targetId);
     
     connection.on('open', () => {
-      document.getElementById('connection-status').innerText = `Connesso! Avvio partita...`;
+      document.getElementById('connection-status').innerText = `Connesso! In attesa dell'Host...`;
       if (typeof bot !== 'undefined') bot.stopThinking();
-      
-      setTimeout(() => {
-        startGameScreen();
-      }, 1000);
     });
   });
 }
@@ -67,8 +67,7 @@ function setupDataListener() {
     }
 
     if (data.type === 'START_MULTIPLAYER') {
-      currentCategory = data.category;
-      startGameScreen();
+      startMultiplayerGame(data.category);
     }
   });
 }
