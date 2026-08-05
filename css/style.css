@@ -224,3 +224,40 @@ h1 {
   min-height: 14px;
   font-weight: bold;
 }
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+#word-input {
+  width: 100%;
+  max-width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: 2px solid #333;
+  background: #1e1e24;
+  color: #fff;
+  outline: none;
+  text-align: center;
+}
+
+#word-input:focus {
+  border-color: #f39c12;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.action-buttons button {
+  width: 100%;
+  cursor: pointer;
+}
