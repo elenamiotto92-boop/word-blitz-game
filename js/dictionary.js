@@ -58,36 +58,8 @@ const DICTIONARY = {
     "Z": ["ZAPATO", "ZORRO", "ZUMO"]
   },
 
-  "PAROLE IN TEDESCO": {
-    "A": ["ARBEIT", "APFEL", "AUTO", "ABEND", "AUGEN"],
-    "B": ["BIER", "BROT", "BUCH", "BRUDER", "BAUM", "BETT"],
-    "C": ["COMPUTER", "CHEF"],
-    "D": ["DANKE", "DEUTSCHLAND", "DORF", "DURST"],
-    "E": ["ESSEN", "ELTERN", "ERDE", "EIS"],
-    "F": ["FREUND", "FRAU", "FAMILIE", "FEUER", "FREIHEIT", "FISCH"],
-    "G": ["GUT", "GELD", "GARTEN", "GLUCK", "GOTT"],
-    "H": ["HAUS", "HUND", "HERZ", "HIMMEL", "HERBST"],
-    "I": ["ICH", "IDEE", "INSEL"],
-    "J": ["JAHR", "JUNGE", "JACKE"],
-    "K": ["KINDER", "KATZE", "KOPF", "KASE", "KLEIN", "KAFFEE"],
-    "L": ["LIEBE", "LEBEN", "LICHT", "LUFT", "LIED"],
-    "M": ["MUTTER", "MANN", "MUSIK", "MILCH", "MORGEN", "MEER"],
-    "N": ["NACHT", "NAME", "NATUR", "NEIN"],
-    "O": ["OBST", "ONKEL", "OHR"],
-    "P": ["PLATZ", "PFERD", "PAPIER"],
-    "Q": ["QUELLE", "QUARK"],
-    "R": ["ROT", "REGEN", "REISE", "RUHE"],
-    "S": ["SONNE", "SCHULE", "SCHWARZ", "STADT", "SCHNEE", "SOMMER"],
-    "T": ["TAG", "TISCH", "TIER", "TRAUM", "TEE"],
-    "U": ["UHR", "URLAUB", "UNIVERSUM"],
-    "V": ["VATER", "VOGEL", "VOLK"],
-    "W": ["WASSER", "WELT", "WIND", "WALD", "WINTER", "WEIN"],
-    "X": ["XYLOPHON"],
-    "Y": ["YOGA"],
-    "Z": ["ZEIT", "ZIMMER", "ZUCKER", "ZUG", "ZUKUNFT"]
-  },
-
-  "INSULTI E PAROLACCE": {
+ 
+ "INSULTI E PAROLACCE": {
     "A": ["ASINO", "ARROGANTE", "ANTIPATICO", "ACCATTONE"],
     "B": ["BASTARDO", "BIFOLCO", "BULLO", "BRUTTO", "BAGASCIA", "BALORDO", "BOCCALONE"],
     "C": ["COGLIONE", "CRETINO", "CORNUTO", "CAZZO", "CAZZONE", "CANE", "CAPRA", "CAFONE", "CULO", "COZZARO"],
