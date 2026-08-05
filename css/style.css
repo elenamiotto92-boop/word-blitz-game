@@ -20,10 +20,11 @@ body {
 
 #home-screen, #game-container {
   width: 100%;
-  max-width: 480px;
+  max-width: 680px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 15px;
 }
 
 header {
