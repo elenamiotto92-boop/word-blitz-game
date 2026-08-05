@@ -1,4 +1,3 @@
-// Setup iniziale
 const MAX_WORDS = 3;
 const MAX_LIGHTNINGS = 40;
 const HAND_SIZE = 7;
@@ -9,23 +8,36 @@ let playerHand = [];
 let playerLightnings = 0;
 const bot = new BotPlayer();
 
-// Mazzo Lettere (con pesi di fulmini basati sulla difficoltà)
+// Mazzo Lettere Completo (Tutto l'alfabeto A-Z con fulmini bilanciati)
 const LETTERS_POOL = [
   { letter: 'A', lightnings: 1 },
   { letter: 'B', lightnings: 2 },
   { letter: 'C', lightnings: 1 },
+  { letter: 'D', lightnings: 2 },
+  { letter: 'E', lightnings: 1 },
   { letter: 'F', lightnings: 2 },
-  { letter: 'G', lightnings: 1 },
+  { letter: 'G', lightnings: 2 },
+  { letter: 'H', lightnings: 3 },
+  { letter: 'I', lightnings: 1 },
+  { letter: 'J', lightnings: 3 },
+  { letter: 'K', lightnings: 3 },
   { letter: 'L', lightnings: 1 },
-  { letter: 'M', lightnings: 2 },
-  { letter: 'N', lightnings: 2 },
+  { letter: 'M', lightnings: 1 },
+  { letter: 'N', lightnings: 1 },
+  { letter: 'O', lightnings: 1 },
   { letter: 'P', lightnings: 1 },
+  { letter: 'Q', lightnings: 3 },
+  { letter: 'R', lightnings: 1 },
   { letter: 'S', lightnings: 1 },
-  { letter: 'T', lightnings: 2 },
-  { letter: 'V', lightnings: 3 }
+  { letter: 'T', lightnings: 1 },
+  { letter: 'U', lightnings: 2 },
+  { letter: 'V', lightnings: 2 },
+  { letter: 'W', lightnings: 3 },
+  { letter: 'X', lightnings: 3 },
+  { letter: 'Y', lightnings: 3 },
+  { letter: 'Z', lightnings: 3 }
 ];
 
-// Funzioni di avvio
 function initGame() {
   playerHand = drawHand();
   bot.hand = drawHand();
@@ -46,14 +58,11 @@ function nextRound() {
   document.getElementById('played-words').innerHTML = "";
   document.getElementById('words-count').innerText = wordsPlayedInRound;
 
-  // Seleziona categoria casuale tra quelle del dizionario
   const categories = Object.keys(DICTIONARY);
   currentCategory = categories[Math.floor(Math.random() * categories.length)];
   document.getElementById('current-category').innerText = currentCategory;
 
   renderHand();
-
-  // Fai partire il timer di reazione del bot
   bot.startThinking(currentCategory, handleBotPlay);
 }
 
@@ -69,7 +78,6 @@ function renderHand() {
   });
 }
 
-// Scarto carta e aggiornamento sul tavolo
 function registerWordPlay(word, isPlayer = true) {
   wordsPlayedInRound++;
   document.getElementById('words-count').innerText = wordsPlayedInRound;
@@ -79,7 +87,6 @@ function registerWordPlay(word, isPlayer = true) {
   chip.innerText = `${word.toUpperCase()} (${isPlayer ? 'TU' : 'BOT'})`;
   document.getElementById('played-words').appendChild(chip);
 
-  // Controlla se la carta domanda è finita (3 parole giocate)
   if (wordsPlayedInRound >= MAX_WORDS) {
     bot.stopThinking();
     setTimeout(() => {
@@ -92,12 +99,21 @@ function registerWordPlay(word, isPlayer = true) {
 function handleBotPlay(card, word) {
   if (wordsPlayedInRound >= MAX_WORDS) return;
 
-  // Rimuovi carta dalla mano del bot
   bot.hand = bot.hand.filter(c => c.id !== card.id);
   registerWordPlay(word, false);
 }
 
-// Gestione dell'invio parola dal giocatore umano
+// Funzione di Penalità: assegna una carta casuale in mano quando la parola è errata
+function assignPenaltyCard(reasonText) {
+  const penaltyCard = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
+  playerHand.push({ ...penaltyCard, id: Math.random() });
+  renderHand();
+  
+  const errorMsg = document.getElementById('error-msg');
+  errorMsg.innerText = `${reasonText} PENALITÀ: hai ricevuto una carta ${penaltyCard.letter}!`;
+}
+
+// Gestione dell'invio parola
 const wordInput = document.getElementById('word-input');
 const errorMsg = document.getElementById('error-msg');
 
@@ -109,27 +125,27 @@ wordInput.addEventListener('keydown', (e) => {
 
     if (wordsPlayedInRound >= MAX_WORDS) return;
 
-    // 1. Controlla se la parola inizia con una lettera nella mano
+    // 1. Controllo possesso della lettera
     const firstLetter = typedWord.charAt(0);
     const cardIndex = playerHand.findIndex(card => card.letter === firstLetter);
 
     if (cardIndex === -1) {
-      errorMsg.innerText = `Non hai nessuna carta con la lettera ${firstLetter}!`;
+      errorMsg.innerText = `Non hai nessuna carta con la lettera "${firstLetter}" in mano!`;
       return;
     }
 
-    // 2. Convalida la parola nel dizionario
+    // 2. Controllo validità parola nel dizionario -> SE NON VALIDA, PENALITÀ CARTA
     if (!validateWord(currentCategory, typedWord)) {
-      errorMsg.innerText = "Parola non valida per questa categoria!";
+      assignPenaltyCard("Parola non valida per questa categoria!");
       return;
     }
 
-    // 3. Parola corretta -> Gioca e scarta carta
+    // 3. Giocata valida: rimuove la carta e registra la parola
     playerHand.splice(cardIndex, 1);
     renderHand();
     registerWordPlay(typedWord, true);
 
-    // Se il giocatore svuota la mano, vince subito il round
+    // Vittoria del round se svuoti la mano
     if (playerHand.length === 0) {
       bot.stopThinking();
       setTimeout(() => {
@@ -141,9 +157,7 @@ wordInput.addEventListener('keydown', (e) => {
   }
 });
 
-// Penalità a fine round e controllo eliminazione 40 fulmini
 function checkEndRoundPenalties() {
-  // Somma fulmini per carte rimaste in mano
   playerHand.forEach(c => playerLightnings += c.lightnings);
   bot.hand.forEach(c => bot.lightnings += c.lightnings);
 
@@ -152,10 +166,10 @@ function checkEndRoundPenalties() {
 
   if (playerLightnings >= MAX_LIGHTNINGS || bot.lightnings >= MAX_LIGHTNINGS) {
     const winner = playerLightnings < bot.lightnings ? "HAI VINTO TU!" : "HA VINTO IL BOT!";
-    alert(`GIOCO TERMINATO - 40 FULMINI RAGGIUNTI!\n${winner}`);
+    alert(`GIOCO TERMINATO - RAGGIUNTI 40 FULMINI!\n${winner}`);
     location.reload();
   } else {
-    // Pesca nuove carte per completare le mani a 7
+    // Ripristina la mano a 7 carte a inizio turno (se ne hai meno)
     while (playerHand.length < HAND_SIZE) {
       const card = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
       playerHand.push({ ...card, id: Math.random() });
@@ -167,5 +181,4 @@ function checkEndRoundPenalties() {
   }
 }
 
-// Avvia tutto al caricamento pagina
 window.onload = initGame;
