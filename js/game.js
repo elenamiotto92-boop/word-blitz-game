@@ -191,5 +191,46 @@ function endRoundAndCountLightnings() {
     nextCategoryCard();
   }
 }
+// Funzione per attivare il riconoscimento vocale
+function startVoiceRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  
+  if (!SpeechRecognition) {
+    alert("Il tuo browser non supporta i comandi vocali. Usa la tastiera!");
+    return;
+  }
 
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'it-IT'; // Imposta la lingua italiana
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  const micButton = document.getElementById('btn-mic');
+  micButton.style.background = '#f1c40f'; // Giallo = in ascolto
+  document.getElementById('error-msg').innerText = "🎤 In ascolto... Parla!";
+
+  recognition.start();
+
+  recognition.onresult = (event) => {
+    const spokenWord = event.results[0][0].transcript.trim().toUpperCase();
+    micButton.style.background = '#e74c3c'; // Torna rosso
+    document.getElementById('error-msg').innerText = "";
+
+    // Prendi solo la prima parola pronunciata (se dicono una frase)
+    const firstWord = spokenWord.split(" ")[0];
+    
+    // Inserisci la parola nel flusso di gioco come se fosse stata digitata
+    processPlayerWord(firstWord);
+  };
+
+  recognition.onerror = (event) => {
+    micButton.style.background = '#e74c3c';
+    document.getElementById('error-msg').innerText = "Non ho capito bene, riprova!";
+  };
+
+  recognition.onspeechend = () => {
+    recognition.stop();
+    micButton.style.background = '#e74c3c';
+  };
+}
 window.onload = initGame;
