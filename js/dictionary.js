@@ -58,8 +58,7 @@ const DICTIONARY = {
     "Z": ["ZAPATO", "ZORRO", "ZUMO"]
   },
 
- 
- "INSULTI E PAROLACCE": {
+  "INSULTI E PAROLACCE": {
     "A": ["ASINO", "ARROGANTE", "ANTIPATICO", "ACCATTONE"],
     "B": ["BASTARDO", "BIFOLCO", "BULLO", "BRUTTO", "BAGASCIA", "BALORDO", "BOCCALONE"],
     "C": ["COGLIONE", "CRETINO", "CORNUTO", "CAZZO", "CAZZONE", "CANE", "CAPRA", "CAFONE", "CULO", "COZZARO"],
@@ -289,9 +288,9 @@ const DICTIONARY = {
     "X": ["XBOX"],
     "Y": ["YACHT"],
     "Z": ["ZAINO", "ZATTERA", "ZANZARIERA", "ZUCCHERO"]
-  }
-};
-"MARCHE E BRAND": {
+  },
+
+  "MARCHE E BRAND": {
     "A": ["ADIDAS", "APPLE", "AMAZON", "ALFA ROMEO", "AUDI", "ARMANI", "ASICS", "ACER"],
     "B": ["BMW", "BARILLA", "BOSCH", "BURGER KING", "BACARDI", "BENETTON", "BAULI"],
     "C": ["COCA COLA", "CANON", "CALVIN KLEIN", "CHANEL", "CITROEN", "CONVERSE", "CARREFOUR"],
@@ -319,6 +318,8 @@ const DICTIONARY = {
     "Y": ["YAMAHA", "YOKOHAMA", "YSL"],
     "Z": ["ZARA", "ZANUSSI", "ZUCCAMELON"]
   }
+};
+
 // Funzione globale per la validazione automatica
 function validateWord(category, word) {
   const cleanWord = word.trim().toUpperCase();
