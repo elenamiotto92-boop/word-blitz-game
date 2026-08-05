@@ -7,16 +7,18 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<!-- Libreria PeerJS per Multiplayer P2P -->
-<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
-<!-- Pannello Connessione Multiplayer -->
-<div id="multiplayer-panel" style="background: #202024; padding: 15px; margin-bottom: 20px; border-radius: 8px;">
-  <button id="btn-create" onclick="createRoom()">Crea Partita (Host)</button>
-  <input type="text" id="room-code-input" placeholder="Codice Stanza..." style="padding: 8px; width: 150px;">
-  <button id="btn-join" onclick="joinRoom()">Unisciti</button>
-  <p id="connection-status" style="margin-top: 10px; color: #f39c12; font-weight: bold;"></p>
-</div>
+  <!-- Libreria PeerJS per Multiplayer P2P -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+  <!-- Pannello Connessione Multiplayer -->
+  <div id="multiplayer-panel" style="background: #202024; padding: 15px; margin-bottom: 20px; border-radius: 8px; text-align: center;">
+    <button id="btn-create" onclick="createRoom()" style="padding: 8px 12px; cursor: pointer;">Crea Partita (Host)</button>
+    <input type="text" id="room-code-input" placeholder="Codice Stanza..." style="padding: 8px; width: 150px; text-align: center;">
+    <button id="btn-join" onclick="joinRoom()" style="padding: 8px 12px; cursor: pointer;">Unisciti</button>
+    <p id="connection-status" style="margin-top: 10px; color: #f39c12; font-weight: bold;"></p>
+  </div>
+
   <header>
     <h1>⚡ WORD BLITZ ⚡</h1>
     <div id="status-bar">
@@ -38,37 +40,34 @@
       <div id="played-words" class="played-words"></div>
     </section>
 
-    <!-- Mano di Carte e Input Veloce -->
+    <!-- Mano di Carte e Input Veloce (Tastiera + Microfono Vocale) -->
     <section class="player-area">
       <h3>LA TUA MANO</h3>
       <div id="player-hand" class="hand"></div>
 
-      <!-- Input veloce per digitare la parola -->
-      <div class="input-area">
+      <!-- Input unificato per digitare o parlare -->
+      <div class="input-area" style="display: flex; gap: 10px; justify-content: center; align-items: center;">
         <input 
           type="text" 
           id="word-input" 
-          placeholder="Scrivi una parola rapida e premi INVIO..." 
+          placeholder="Scrivi o usa il microfono..." 
           autocomplete="off" 
+          autocorrect="off" 
+          autocapitalize="characters" 
+          spellcheck="false"
+          style="flex: 1; max-width: 320px;"
           autofocus
         >
-        <span id="error-msg" class="error-msg"></span>
+        <button id="btn-mic" onclick="startVoiceRecognition()" style="background: #e74c3c; color: white; border: none; padding: 12px 16px; border-radius: 50%; font-size: 1.2rem; cursor: pointer;" title="Usa comando vocale">🎙️</button>
       </div>
+      <span id="error-msg" class="error-msg"></span>
     </section>
   </main>
-<input 
-  type="text" 
-  id="word-input" 
-  placeholder="Scrivi e premi INVIO..." 
-  autocomplete="off" 
-  autocorrect="off" 
-  autocapitalize="characters" 
-  spellcheck="false"
->
+
   <!-- Ordine di caricamento degli script (fondamentale) -->
- <script src="js/dictionary.js"></script>
-<script src="js/bot.js"></script>
-<script src="js/network.js"></script>
-<script src="js/game.js"></script>
+  <script src="js/dictionary.js"></script>
+  <script src="js/bot.js"></script>
+  <script src="js/network.js"></script>
+  <script src="js/game.js"></script>
 </body>
 </html>
