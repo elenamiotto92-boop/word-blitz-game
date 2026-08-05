@@ -8,7 +8,6 @@ let playerHand = [];
 let playerLightnings = 0;
 const bot = new BotPlayer();
 
-// Mazzo Lettere Completo (A-Z)
 const LETTERS_POOL = [
   { letter: 'A', lightnings: 1 },
   { letter: 'B', lightnings: 2 },
@@ -40,16 +39,11 @@ const LETTERS_POOL = [
 
 function initGame() {
   playerHand = drawHand();
-  
-  // Se siamo in solitaria, pesca anche la mano del bot
   if (typeof connection === 'undefined' || !connection) {
     bot.hand = drawHand();
   }
-
-  // Scegli la prima categoria
   const categories = Object.keys(DICTIONARY);
   currentCategory = categories[Math.floor(Math.random() * categories.length)];
-  
   nextCategoryCard();
 }
 
@@ -66,11 +60,10 @@ function nextCategoryCard() {
   wordsPlayedOnCard = 0;
   document.getElementById('played-words').innerHTML = "";
   document.getElementById('words-count').innerText = wordsPlayedOnCard;
-
   document.getElementById('current-category').innerText = currentCategory;
+
   renderHand();
 
-  // Se siamo in multiplayer, SOLO L'HOST sceglie e invia la nuova categoria all'amico
   if (typeof isHost !== 'undefined' && isHost && typeof sendData === 'function') {
     const categories = Object.keys(DICTIONARY);
     currentCategory = categories[Math.floor(Math.random() * categories.length)];
@@ -78,7 +71,6 @@ function nextCategoryCard() {
     sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
   }
 
-  // Fai partire il bot SOLO se NON c'è una connessione multiplayer attiva
   if (!connection || !connection.open) {
     bot.startThinking(currentCategory, handleBotPlay);
   }
@@ -87,7 +79,6 @@ function nextCategoryCard() {
 function renderHand() {
   const handEl = document.getElementById('player-hand');
   handEl.innerHTML = "";
-
   playerHand.forEach(card => {
     const cardDiv = document.createElement('div');
     cardDiv.className = 'card';
@@ -109,12 +100,9 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
   chip.innerText = `${word.toUpperCase()} (${label})`;
   document.getElementById('played-words').appendChild(chip);
 
-  // Appena si arriva a 3 parole, si cambia categoria
   if (wordsPlayedOnCard >= MAX_WORDS) {
     if (!connection || !connection.open) bot.stopThinking();
-    
     setTimeout(() => {
-      // Se gioca l'host, sceglie la nuova categoria e la invia
       if (typeof isHost !== 'undefined' && isHost) {
         const categories = Object.keys(DICTIONARY);
         currentCategory = categories[Math.floor(Math.random() * categories.length)];
@@ -127,7 +115,6 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
 
 function handleBotPlay(card, word) {
   if (wordsPlayedOnCard >= MAX_WORDS) return;
-
   bot.hand = bot.hand.filter(c => c.id !== card.id);
   registerWordPlay(word, false);
 
@@ -146,35 +133,41 @@ function assignPenaltyCard(reasonText) {
   renderHand();
   
   const errorMsg = document.getElementById('error-msg');
-  errorMsg.innerText = `${reasonText} PENALITÀ: hai ricevuto una carta ${penaltyCard.letter}!`;
+  errorMsg.innerText = `${reasonText} PENALITÀ: carta ${penaltyCard.letter}!`;
+}
+
+// Funzione richiamata dal Tasto INVIA o dal tasto INVIO della tastiera
+function submitTypedWord() {
+  const wordInput = document.getElementById('word-input');
+  const typedWord = wordInput.value.trim().toUpperCase();
+  wordInput.value = "";
+  processPlayerWord(typedWord);
 }
 
 const wordInput = document.getElementById('word-input');
-const errorMsg = document.getElementById('error-msg');
-
 wordInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
-    const typedWord = wordInput.value.trim().toUpperCase();
-    wordInput.value = "";
-    processPlayerWord(typedWord);
+    submitTypedWord();
   }
 });
 
 function processPlayerWord(typedWord) {
+  const errorMsg = document.getElementById('error-msg');
   errorMsg.innerText = "";
 
+  if (!typedWord) return;
   if (wordsPlayedOnCard >= MAX_WORDS) return;
 
   const firstLetter = typedWord.charAt(0);
   const cardIndex = playerHand.findIndex(card => card.letter === firstLetter);
 
   if (cardIndex === -1) {
-    errorMsg.innerText = `Non hai nessuna carta con la lettera "${firstLetter}" in mano!`;
+    errorMsg.innerText = `Non hai la lettera "${firstLetter}" in mano!`;
     return;
   }
 
   if (!validateWord(currentCategory, typedWord)) {
-    assignPenaltyCard(`"${typedWord}" non valida per questa categoria!`);
+    assignPenaltyCard(`"${typedWord}" non valida!`);
     return;
   }
 
@@ -182,7 +175,6 @@ function processPlayerWord(typedWord) {
   renderHand();
   registerWordPlay(typedWord, true);
 
-  // Invia la parola all'amico in multiplayer
   if (typeof sendData === 'function') {
     sendData({ type: 'PLAY_WORD', word: typedWord });
   }
