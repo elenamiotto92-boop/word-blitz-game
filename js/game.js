@@ -48,7 +48,6 @@ function startGameScreen() {
   document.getElementById('home-screen').style.display = 'none';
   document.getElementById('game-container').style.display = 'block';
   
-  // Attiva l'ascolto del tasto Invio sulla casella di testo ora visibile
   const wordInput = document.getElementById('word-input');
   if (wordInput && !wordInput.dataset.listenerAttached) {
     wordInput.dataset.listenerAttached = "true";
@@ -70,6 +69,7 @@ function initGame() {
     bot.hand = drawHand();
   }
   
+  // Seleziona subito la categoria per evitare il blocco
   const categories = Object.keys(DICTIONARY);
   currentCategory = categories[Math.floor(Math.random() * categories.length)];
   
