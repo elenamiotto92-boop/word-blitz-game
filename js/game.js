@@ -48,7 +48,6 @@ function startGameScreen() {
   document.getElementById('home-screen').style.display = 'none';
   document.getElementById('game-container').style.display = 'block';
   
-  // Attiva l'ascolto dei dati se siamo in multiplayer
   if (typeof setupDataListener === 'function') {
     setupDataListener();
   }
@@ -59,8 +58,11 @@ function initGame() {
   if (typeof connection === 'undefined' || !connection) {
     bot.hand = drawHand();
   }
+  
+  // Seleziona subito una categoria casuale per evitare "Caricamento..."
   const categories = Object.keys(DICTIONARY);
   currentCategory = categories[Math.floor(Math.random() * categories.length)];
+  
   nextCategoryCard();
 }
 
@@ -77,8 +79,14 @@ function nextCategoryCard() {
   wordsPlayedOnCard = 0;
   document.getElementById('played-words').innerHTML = "";
   document.getElementById('words-count').innerText = wordsPlayedOnCard;
+  
+  // Se non siamo l'host in multiplayer, prendiamo la categoria globale
+  if (!currentCategory) {
+    const categories = Object.keys(DICTIONARY);
+    currentCategory = categories[Math.floor(Math.random() * categories.length)];
+  }
+  
   document.getElementById('current-category').innerText = currentCategory;
-
   renderHand();
 
   if (typeof isHost !== 'undefined' && isHost && typeof sendData === 'function') {
@@ -161,11 +169,13 @@ function submitTypedWord() {
 }
 
 const wordInput = document.getElementById('word-input');
-wordInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    submitTypedWord();
-  }
-});
+if (wordInput) {
+  wordInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      submitTypedWord();
+    }
+  });
+}
 
 function processPlayerWord(typedWord) {
   const errorMsg = document.getElementById('error-msg');
