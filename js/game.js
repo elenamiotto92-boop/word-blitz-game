@@ -8,7 +8,7 @@ let playerHand = [];
 let playerLightnings = 0;
 const bot = new BotPlayer();
 
-// Mazzo Lettere Completo (Tutto l'alfabeto A-Z con fulmini bilanciati)
+// Mazzo Lettere Completo (A-Z)
 const LETTERS_POOL = [
   { letter: 'A', lightnings: 1 },
   { letter: 'B', lightnings: 2 },
@@ -38,14 +38,21 @@ const LETTERS_POOL = [
   { letter: 'Z', lightnings: 3 }
 ];
 
-// Avvio del gioco
 function initGame() {
   playerHand = drawHand();
-  bot.hand = drawHand();
+  
+  // Se siamo in solitaria, pesca anche la mano del bot
+  if (typeof connection === 'undefined' || !connection) {
+    bot.hand = drawHand();
+  }
+
+  // Scegli la prima categoria
+  const categories = Object.keys(DICTIONARY);
+  currentCategory = categories[Math.floor(Math.random() * categories.length)];
+  
   nextCategoryCard();
 }
 
-// Pesca mano di 7 carte
 function drawHand() {
   const hand = [];
   for (let i = 0; i < HAND_SIZE; i++) {
@@ -55,21 +62,28 @@ function drawHand() {
   return hand;
 }
 
-// Gira una NUOVA CARTA CATEGORIA (dopo 3 parole o a inizio manche)
 function nextCategoryCard() {
   wordsPlayedOnCard = 0;
   document.getElementById('played-words').innerHTML = "";
   document.getElementById('words-count').innerText = wordsPlayedOnCard;
 
-  const categories = Object.keys(DICTIONARY);
-  currentCategory = categories[Math.floor(Math.random() * categories.length)];
   document.getElementById('current-category').innerText = currentCategory;
-
   renderHand();
-  bot.startThinking(currentCategory, handleBotPlay);
+
+  // Se siamo in multiplayer, SOLO L'HOST sceglie e invia la nuova categoria all'amico
+  if (typeof isHost !== 'undefined' && isHost && typeof sendData === 'function') {
+    const categories = Object.keys(DICTIONARY);
+    currentCategory = categories[Math.floor(Math.random() * categories.length)];
+    document.getElementById('current-category').innerText = currentCategory;
+    sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
+  }
+
+  // Fai partire il bot SOLO se NON c'è una connessione multiplayer attiva
+  if (!connection || !connection.open) {
+    bot.startThinking(currentCategory, handleBotPlay);
+  }
 }
 
-// Mostra le carte del giocatore a schermo
 function renderHand() {
   const handEl = document.getElementById('player-hand');
   handEl.innerHTML = "";
@@ -82,33 +96,41 @@ function renderHand() {
   });
 }
 
-// Registra la parola giocata sul tavolo
-function registerWordPlay(word, isPlayer = true) {
+function registerWordPlay(word, isPlayer = true, customName = null) {
   wordsPlayedOnCard++;
   document.getElementById('words-count').innerText = wordsPlayedOnCard;
 
   const chip = document.createElement('div');
   chip.className = 'played-chip';
-  chip.innerText = `${word.toUpperCase()} (${isPlayer ? 'TU' : 'BOT'})`;
+  
+  let label = isPlayer ? "TU" : "BOT";
+  if (customName) label = customName;
+
+  chip.innerText = `${word.toUpperCase()} (${label})`;
   document.getElementById('played-words').appendChild(chip);
 
-  // REGOLA DELLE 3 PAROLE: appena si arriva a 3, si cambia SUBITO categoria!
+  // Appena si arriva a 3 parole, si cambia categoria
   if (wordsPlayedOnCard >= MAX_WORDS) {
-    bot.stopThinking();
+    if (!connection || !connection.open) bot.stopThinking();
+    
     setTimeout(() => {
+      // Se gioca l'host, sceglie la nuova categoria e la invia
+      if (typeof isHost !== 'undefined' && isHost) {
+        const categories = Object.keys(DICTIONARY);
+        currentCategory = categories[Math.floor(Math.random() * categories.length)];
+        sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
+      }
       nextCategoryCard();
     }, 1200);
   }
 }
 
-// Giocata del Bot
 function handleBotPlay(card, word) {
   if (wordsPlayedOnCard >= MAX_WORDS) return;
 
   bot.hand = bot.hand.filter(c => c.id !== card.id);
   registerWordPlay(word, false);
 
-  // Se il bot resta senza carte, vince la manche!
   if (bot.hand.length === 0) {
     bot.stopThinking();
     setTimeout(() => {
@@ -118,7 +140,6 @@ function handleBotPlay(card, word) {
   }
 }
 
-// Penalità: assegna una carta in mano se la parola è errata
 function assignPenaltyCard(reasonText) {
   const penaltyCard = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
   playerHand.push({ ...penaltyCard, id: Math.random() });
@@ -128,7 +149,6 @@ function assignPenaltyCard(reasonText) {
   errorMsg.innerText = `${reasonText} PENALITÀ: hai ricevuto una carta ${penaltyCard.letter}!`;
 }
 
-// Gestione input tastiera
 const wordInput = document.getElementById('word-input');
 const errorMsg = document.getElementById('error-msg');
 
@@ -140,13 +160,11 @@ wordInput.addEventListener('keydown', (e) => {
   }
 });
 
-// Funzione unica di controllo parola (condivisa tra tastiera e microfono)
 function processPlayerWord(typedWord) {
   errorMsg.innerText = "";
 
   if (wordsPlayedOnCard >= MAX_WORDS) return;
 
-  // 1. Controllo possesso lettera in mano
   const firstLetter = typedWord.charAt(0);
   const cardIndex = playerHand.findIndex(card => card.letter === firstLetter);
 
@@ -155,24 +173,22 @@ function processPlayerWord(typedWord) {
     return;
   }
 
-  // 2. Controllo validità parola nel dizionario -> SE NON VALIDA, PENALITÀ CARTA
   if (!validateWord(currentCategory, typedWord)) {
     assignPenaltyCard(`"${typedWord}" non valida per questa categoria!`);
     return;
   }
 
-  // 3. Giocata valida: rimuove la carta, registra la parola e la invia all'amico se sei in multiplayer
   playerHand.splice(cardIndex, 1);
   renderHand();
   registerWordPlay(typedWord, true);
 
+  // Invia la parola all'amico in multiplayer
   if (typeof sendData === 'function') {
     sendData({ type: 'PLAY_WORD', word: typedWord });
   }
 
-  // Se resti con 0 carte in mano, vinci la manche!
   if (playerHand.length === 0) {
-    bot.stopThinking();
+    if (!connection || !connection.open) bot.stopThinking();
     setTimeout(() => {
       alert("HAI SVUOTATO LA MANO! Fine della manche.");
       endRoundAndCountLightnings();
@@ -180,33 +196,35 @@ function processPlayerWord(typedWord) {
   }
 }
 
-// Fine Manche: conta i fulmini delle carte rimaste in mano e controlla i 40 fulmini totali
 function endRoundAndCountLightnings() {
   playerHand.forEach(c => playerLightnings += c.lightnings);
-  bot.hand.forEach(c => bot.lightnings += c.lightnings);
+  
+  if (typeof bot !== 'undefined' && bot.hand) {
+    bot.hand.forEach(c => bot.lightnings += c.lightnings);
+  }
 
   document.getElementById('player-lightnings').innerText = playerLightnings;
-  document.getElementById('bot-lightnings').innerText = bot.lightnings;
+  
+  const botLightningsEl = document.getElementById('bot-lightnings');
+  if (botLightningsEl && bot.lightnings) {
+    botLightningsEl.innerText = bot.lightnings;
+  }
 
-  // Eliminazione a 40 fulmini
-  if (playerLightnings >= MAX_LIGHTNINGS || bot.lightnings >= MAX_LIGHTNINGS) {
-    const winner = playerLightnings < bot.lightnings ? "HAI VINTO LA PARTITA!" : "HA VINTO IL BOT!";
-    alert(`ELIMINAZIONE - RAGGIUNTI I 40 FULMINI!\n${winner}`);
+  if (playerLightnings >= MAX_LIGHTNINGS || (bot.lightnings && bot.lightnings >= MAX_LIGHTNINGS)) {
+    alert("FINE PARTITA - 40 FULMINI RAGGIUNTI!");
     location.reload();
   } else {
-    // Si ricomincia una nuova manche distribuendo 7 nuove carte a testa
     playerHand = drawHand();
-    bot.hand = drawHand();
+    if (!connection || !connection.open) bot.hand = drawHand();
     nextCategoryCard();
   }
 }
 
-// Funzione per attivare il riconoscimento vocale
 function startVoiceRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   
   if (!SpeechRecognition) {
-    alert("Il tuo browser non supporta i comandi vocali. Usa la tastiera!");
+    alert("Il tuo browser non supporta i comandi vocali.");
     return;
   }
 
@@ -216,23 +234,23 @@ function startVoiceRecognition() {
   recognition.maxAlternatives = 1;
 
   const micButton = document.getElementById('btn-mic');
-  micButton.style.background = '#f1c40f'; // Giallo = in ascolto
-  document.getElementById('error-msg').innerText = "🎤 In ascolto... Parla!";
+  micButton.style.background = '#f1c40f';
+  document.getElementById('error-msg').innerText = "🎤 In ascolto...";
 
   recognition.start();
 
   recognition.onresult = (event) => {
     const spokenWord = event.results[0][0].transcript.trim().toUpperCase();
-    micButton.style.background = '#e74c3c'; // Torna rosso
+    micButton.style.background = '#e74c3c';
     document.getElementById('error-msg').innerText = "";
 
     const firstWord = spokenWord.split(" ")[0];
     processPlayerWord(firstWord);
   };
 
-  recognition.onerror = (event) => {
+  recognition.onerror = () => {
     micButton.style.background = '#e74c3c';
-    document.getElementById('error-msg').innerText = "Non ho capito bene, riprova!";
+    document.getElementById('error-msg').innerText = "Riprova!";
   };
 
   recognition.onspeechend = () => {
