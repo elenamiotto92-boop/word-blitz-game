@@ -1,0 +1,169 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #121214;
+  color: #f1f1f1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+header {
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #2a2a30;
+  padding-bottom: 10px;
+}
+
+h1 {
+  color: #f39c12;
+  font-size: 1.6rem;
+}
+
+#status-bar span {
+  margin-left: 15px;
+  font-size: 0.95rem;
+  background: #202024;
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+.board {
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.question-card {
+  background: linear-gradient(135deg, #2c3e50, #1a252f);
+  border: 3px solid #f39c12;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+
+.question-card .label {
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  color: #bdc3c7;
+}
+
+.question-card h2 {
+  font-size: 1.8rem;
+  margin: 10px 0;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.progress {
+  font-weight: bold;
+  color: #f1c40f;
+}
+
+.played-words {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 15px;
+  min-height: 40px;
+}
+
+.played-chip {
+  background: #27ae60;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: bold;
+  animation: popIn 0.2s ease-out;
+}
+
+.player-area {
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+}
+
+.player-area h3 {
+  margin-bottom: 12px;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.hand {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.card {
+  background: #ecf0f1;
+  color: #111;
+  width: 60px;
+  height: 85px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-weight: 800;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  position: relative;
+  transition: transform 0.1s;
+}
+
+.card .lightning {
+  font-size: 0.75rem;
+  color: #c0392b;
+  margin-top: 5px;
+}
+
+.input-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#word-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 12px 18px;
+  font-size: 1.1rem;
+  border-radius: 30px;
+  border: 2px solid #333;
+  background: #1e1e24;
+  color: #fff;
+  outline: none;
+  text-align: center;
+}
+
+#word-input:focus {
+  border-color: #f39c12;
+}
+
+.error-msg {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  min-height: 20px;
+  font-weight: bold;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
