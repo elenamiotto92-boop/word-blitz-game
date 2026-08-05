@@ -37,6 +37,23 @@ const LETTERS_POOL = [
   { letter: 'Z', lightnings: 3 }
 ];
 
+// Avvia la partita in singolo contro il Bot
+function startSinglePlayer() {
+  startGameScreen();
+  initGame();
+}
+
+// Passa dalla schermata iniziale al tavolo di gioco
+function startGameScreen() {
+  document.getElementById('home-screen').style.display = 'none';
+  document.getElementById('game-container').style.display = 'block';
+  
+  // Attiva l'ascolto dei dati se siamo in multiplayer
+  if (typeof setupDataListener === 'function') {
+    setupDataListener();
+  }
+}
+
 function initGame() {
   playerHand = drawHand();
   if (typeof connection === 'undefined' || !connection) {
@@ -136,7 +153,6 @@ function assignPenaltyCard(reasonText) {
   errorMsg.innerText = `${reasonText} PENALITÀ: carta ${penaltyCard.letter}!`;
 }
 
-// Funzione richiamata dal Tasto INVIA o dal tasto INVIO della tastiera
 function submitTypedWord() {
   const wordInput = document.getElementById('word-input');
   const typedWord = wordInput.value.trim().toUpperCase();
@@ -250,5 +266,3 @@ function startVoiceRecognition() {
     micButton.style.background = '#e74c3c';
   };
 }
-
-window.onload = initGame;
