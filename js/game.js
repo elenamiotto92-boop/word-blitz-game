@@ -155,7 +155,7 @@ if (wordsPlayedOnCard >= MAX_WORDS) {
       nextCategoryCard();
     }, 1200);
   }
-
+}
 function processPlayerWord(typedWord) {
   const errorMsg = document.getElementById('error-msg');
   if (errorMsg) errorMsg.innerText = "";
