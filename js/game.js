@@ -3,7 +3,7 @@ const MAX_LIGHTNINGS = 40;
 const HAND_SIZE = 7;
 
 let currentCategory = "";
-let wordsPlayedInRound = 0;
+let wordsPlayedOnCard = 0;
 let playerHand = [];
 let playerLightnings = 0;
 const bot = new BotPlayer();
@@ -38,12 +38,14 @@ const LETTERS_POOL = [
   { letter: 'Z', lightnings: 3 }
 ];
 
+// Avvio del gioco
 function initGame() {
   playerHand = drawHand();
   bot.hand = drawHand();
-  nextRound();
+  nextCategoryCard();
 }
 
+// Pesca mano di 7 carte
 function drawHand() {
   const hand = [];
   for (let i = 0; i < HAND_SIZE; i++) {
@@ -53,10 +55,11 @@ function drawHand() {
   return hand;
 }
 
-function nextRound() {
-  wordsPlayedInRound = 0;
+// Gira una NUOVA CARTA CATEGORIA (dopo 3 parole o a inizio manche)
+function nextCategoryCard() {
+  wordsPlayedOnCard = 0;
   document.getElementById('played-words').innerHTML = "";
-  document.getElementById('words-count').innerText = wordsPlayedInRound;
+  document.getElementById('words-count').innerText = wordsPlayedOnCard;
 
   const categories = Object.keys(DICTIONARY);
   currentCategory = categories[Math.floor(Math.random() * categories.length)];
@@ -66,6 +69,7 @@ function nextRound() {
   bot.startThinking(currentCategory, handleBotPlay);
 }
 
+// Mostra le carte del giocatore a schermo
 function renderHand() {
   const handEl = document.getElementById('player-hand');
   handEl.innerHTML = "";
@@ -78,32 +82,43 @@ function renderHand() {
   });
 }
 
+// Registra la parola giocata sul tavolo
 function registerWordPlay(word, isPlayer = true) {
-  wordsPlayedInRound++;
-  document.getElementById('words-count').innerText = wordsPlayedInRound;
+  wordsPlayedOnCard++;
+  document.getElementById('words-count').innerText = wordsPlayedOnCard;
 
   const chip = document.createElement('div');
   chip.className = 'played-chip';
   chip.innerText = `${word.toUpperCase()} (${isPlayer ? 'TU' : 'BOT'})`;
   document.getElementById('played-words').appendChild(chip);
 
-  if (wordsPlayedInRound >= MAX_WORDS) {
+  // REGOLA DELLE 3 PAROLE: appena si arriva a 3, si cambia SUBITO categoria!
+  if (wordsPlayedOnCard >= MAX_WORDS) {
     bot.stopThinking();
     setTimeout(() => {
-      checkEndRoundPenalties();
-      nextRound();
-    }, 1500);
+      nextCategoryCard();
+    }, 1200);
   }
 }
 
+// Giocata del Bot
 function handleBotPlay(card, word) {
-  if (wordsPlayedInRound >= MAX_WORDS) return;
+  if (wordsPlayedOnCard >= MAX_WORDS) return;
 
   bot.hand = bot.hand.filter(c => c.id !== card.id);
   registerWordPlay(word, false);
+
+  // Se il bot resta senza carte, vince la manche!
+  if (bot.hand.length === 0) {
+    bot.stopThinking();
+    setTimeout(() => {
+      alert("Il Bot ha svuotato la mano! Fine della manche.");
+      endRoundAndCountLightnings();
+    }, 500);
+  }
 }
 
-// Funzione di Penalità: assegna una carta casuale in mano quando la parola è errata
+// Penalità: assegna una carta in mano se la parola è errata
 function assignPenaltyCard(reasonText) {
   const penaltyCard = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
   playerHand.push({ ...penaltyCard, id: Math.random() });
@@ -113,7 +128,7 @@ function assignPenaltyCard(reasonText) {
   errorMsg.innerText = `${reasonText} PENALITÀ: hai ricevuto una carta ${penaltyCard.letter}!`;
 }
 
-// Gestione dell'invio parola
+// Gestione input parola del giocatore
 const wordInput = document.getElementById('word-input');
 const errorMsg = document.getElementById('error-msg');
 
@@ -123,9 +138,9 @@ wordInput.addEventListener('keydown', (e) => {
     wordInput.value = "";
     errorMsg.innerText = "";
 
-    if (wordsPlayedInRound >= MAX_WORDS) return;
+    if (wordsPlayedOnCard >= MAX_WORDS) return;
 
-    // 1. Controllo possesso della lettera
+    // 1. Controllo possesso lettera in mano
     const firstLetter = typedWord.charAt(0);
     const cardIndex = playerHand.findIndex(card => card.letter === firstLetter);
 
@@ -140,44 +155,40 @@ wordInput.addEventListener('keydown', (e) => {
       return;
     }
 
-    // 3. Giocata valida: rimuove la carta e registra la parola
+    // 3. Giocata valida: rimuove la carta e registra parola
     playerHand.splice(cardIndex, 1);
     renderHand();
     registerWordPlay(typedWord, true);
 
-    // Vittoria del round se svuoti la mano
+    // Se resti con 0 carte in mano, vinci la manche!
     if (playerHand.length === 0) {
       bot.stopThinking();
       setTimeout(() => {
-        alert("Hai svuotato la mano! Il round finisce.");
-        checkEndRoundPenalties();
-        nextRound();
+        alert("HAI SVUOTATO LA MANO! Fine della manche.");
+        endRoundAndCountLightnings();
       }, 500);
     }
   }
 });
 
-function checkEndRoundPenalties() {
+// Fine Manche: conta i fulmini delle carte rimaste in mano e controlla i 40 fulmini totali
+function endRoundAndCountLightnings() {
   playerHand.forEach(c => playerLightnings += c.lightnings);
   bot.hand.forEach(c => bot.lightnings += c.lightnings);
 
   document.getElementById('player-lightnings').innerText = playerLightnings;
   document.getElementById('bot-lightnings').innerText = bot.lightnings;
 
+  // Eliminazione a 40 fulmini
   if (playerLightnings >= MAX_LIGHTNINGS || bot.lightnings >= MAX_LIGHTNINGS) {
-    const winner = playerLightnings < bot.lightnings ? "HAI VINTO TU!" : "HA VINTO IL BOT!";
-    alert(`GIOCO TERMINATO - RAGGIUNTI 40 FULMINI!\n${winner}`);
+    const winner = playerLightnings < bot.lightnings ? "HAI VINTO LA PARTITA!" : "HA VINTO IL BOT!";
+    alert(`ELIMINAZIONE - RAGGIUNTI I 40 FULMINI!\n${winner}`);
     location.reload();
   } else {
-    // Ripristina la mano a 7 carte a inizio turno (se ne hai meno)
-    while (playerHand.length < HAND_SIZE) {
-      const card = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
-      playerHand.push({ ...card, id: Math.random() });
-    }
-    while (bot.hand.length < HAND_SIZE) {
-      const card = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
-      bot.hand.push({ ...card, id: Math.random() });
-    }
+    // Si ricomincia una nuova manche distribuendo 7 nuove carte a testa
+    playerHand = drawHand();
+    bot.hand = drawHand();
+    nextCategoryCard();
   }
 }
 
