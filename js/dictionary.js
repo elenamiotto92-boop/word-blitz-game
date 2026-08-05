@@ -291,7 +291,34 @@ const DICTIONARY = {
     "Z": ["ZAINO", "ZATTERA", "ZANZARIERA", "ZUCCHERO"]
   }
 };
-
+"MARCHE E BRAND": {
+    "A": ["ADIDAS", "APPLE", "AMAZON", "ALFA ROMEO", "AUDI", "ARMANI", "ASICS", "ACER"],
+    "B": ["BMW", "BARILLA", "BOSCH", "BURGER KING", "BACARDI", "BENETTON", "BAULI"],
+    "C": ["COCA COLA", "CANON", "CALVIN KLEIN", "CHANEL", "CITROEN", "CONVERSE", "CARREFOUR"],
+    "D": ["DISNEY", "DOLCE E GABBANA", "DANONE", "DECECCO", "DIOR", "DELL", "DACIA"],
+    "E": ["EBAY", "EPSON", "ERICSSON", "ESSO", "ENEL"],
+    "F": ["FERRARI", "FIAT", "FORD", "FERRERO", "FENDI", "FANTA", "FILA"],
+    "G": ["GOOGLE", "GUCCI", "GILLETTE", "GARMIN", "GATORADE", "GUESS"],
+    "H": ["HONDA", "HUAWEI", "HEINEKEN", "HYUNDAI", "HEINZ", "HP", "H&M"],
+    "I": ["IKEA", "IBM", "INTEL", "INSTAGRAM", "ILLY", "IVECO"],
+    "J": ["JEEP", "JAGUAR", "JBL", "JOHN DEERE"],
+    "K": ["KELLOGGS", "KIA", "KINDER", "KFC", "KODAK", "KAPPA"],
+    "L": ["LEGO", "LEVIS", "LOREAL", "LACOSTE", "LINDT", "LAVAZZA", "LAMBORGHINI"],
+    "M": ["MCDONALDS", "MICROSOFT", "MERCEDES", "MASERATI", "MULINO BIANCO", "MOTOROLA", "MONCLER"],
+    "N": ["NIKE", "NESTLE", "NUTELLA", "NISSAN", "NETFLIX", "NIKON", "NOKIA", "NINTENDO"],
+    "O": ["OPEL", "OMEGA", "ORAL B", "OAKLEY"],
+    "P": ["PEPSI", "PORSCHE", "PUMA", "PRADA", "PANASONIC", "PHILIPS", "PIRELLI", "PEUGEOT"],
+    "Q": ["QATAR AIRWAYS", "QUAKER"],
+    "R": ["ROLEX", "RENAULT", "RED BULL", "REEBOK", "RAY BAN", "RAYBAN", "RYANAIR"],
+    "S": ["SAMSUNG", "SONY", "SUBARU", "SEAT", "SWATCH", "STARBUCKS", "SAN BENEDETTO", "SUZUKI"],
+    "T": ["TOYOTA", "TOSHIBA", "TIM", "TESLA", "TWIX", "THE NORTH FACE", "TIFFANY"],
+    "U": ["UBER", "UNDER ARMOUR", "UNICREDIT"],
+    "V": ["VOLKSWAGEN", "VOLVO", "VODAFONE", "VALENTINO", "VANS", "VERSACE", "VODKA ABSOLUT"],
+    "W": ["WHIRLPOOL", "WIND", "WALT DISNEY"],
+    "X": ["XIAOMI", "XBOX"],
+    "Y": ["YAMAHA", "YOKOHAMA", "YSL"],
+    "Z": ["ZARA", "ZANUSSI", "ZUCCAMELON"]
+  }
 // Funzione globale per la validazione automatica
 function validateWord(category, word) {
   const cleanWord = word.trim().toUpperCase();
