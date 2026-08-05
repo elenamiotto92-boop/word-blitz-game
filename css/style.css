@@ -15,7 +15,7 @@ html, body {
   align-items: center;
   justify-content: flex-start;
   overflow: hidden;
-  padding: 6px 12px;
+  padding: 8px 12px;
 }
 
 #home-screen {
@@ -25,30 +25,40 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
-  padding-top: 2px;
+  justify-content: center; /* Centra tutto verticalmente eliminando il vuoto in basso */
+  gap: 16px;
+  padding: 5px 0;
 }
 
 #home-screen h1 {
   color: #f39c12;
-  font-size: 1.5rem;
-  margin-top: 2px;
+  font-size: 1.7rem;
+  margin-bottom: 4px;
 }
 
-/* Riquadro regole più grande e spazioso */
+/* Riquadro regole più grande, spazioso e con font aumentato */
 #home-screen > div:nth-of-type(1) {
   width: 100% !important;
   max-width: 100% !important;
-  padding: 16px 18px !important;
-  font-size: 0.9rem !important;
-  line-height: 1.5 !important;
+  padding: 18px 20px !important;
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+}
+
+#home-screen > div:nth-of-type(1) h3 {
+  font-size: 1.15rem !important;
+  margin-bottom: 10px !important;
+}
+
+#home-screen > div:nth-of-type(1) p {
+  font-size: 0.95rem !important;
+  margin-bottom: 6px !important;
 }
 
 #home-screen h3 {
-  font-size: 0.95rem;
-  margin-top: 2px;
-  margin-bottom: 2px;
+  font-size: 1.05rem;
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 
 #game-container {
