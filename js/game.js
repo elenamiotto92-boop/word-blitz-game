@@ -48,6 +48,17 @@ function startGameScreen() {
   document.getElementById('home-screen').style.display = 'none';
   document.getElementById('game-container').style.display = 'block';
   
+  // Attiva l'ascolto del tasto Invio sulla casella di testo ora visibile
+  const wordInput = document.getElementById('word-input');
+  if (wordInput && !wordInput.dataset.listenerAttached) {
+    wordInput.dataset.listenerAttached = "true";
+    wordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        submitTypedWord();
+      }
+    });
+  }
+
   if (typeof setupDataListener === 'function') {
     setupDataListener();
   }
@@ -59,7 +70,6 @@ function initGame() {
     bot.hand = drawHand();
   }
   
-  // Seleziona subito una categoria casuale per evitare "Caricamento..."
   const categories = Object.keys(DICTIONARY);
   currentCategory = categories[Math.floor(Math.random() * categories.length)];
   
@@ -80,7 +90,6 @@ function nextCategoryCard() {
   document.getElementById('played-words').innerHTML = "";
   document.getElementById('words-count').innerText = wordsPlayedOnCard;
   
-  // Se non siamo l'host in multiplayer, prendiamo la categoria globale
   if (!currentCategory) {
     const categories = Object.keys(DICTIONARY);
     currentCategory = categories[Math.floor(Math.random() * categories.length)];
@@ -103,6 +112,7 @@ function nextCategoryCard() {
 
 function renderHand() {
   const handEl = document.getElementById('player-hand');
+  if (!handEl) return;
   handEl.innerHTML = "";
   playerHand.forEach(card => {
     const cardDiv = document.createElement('div');
@@ -158,28 +168,22 @@ function assignPenaltyCard(reasonText) {
   renderHand();
   
   const errorMsg = document.getElementById('error-msg');
-  errorMsg.innerText = `${reasonText} PENALITÀ: carta ${penaltyCard.letter}!`;
+  if (errorMsg) {
+    errorMsg.innerText = `${reasonText} PENALITÀ: carta ${penaltyCard.letter}!`;
+  }
 }
 
 function submitTypedWord() {
   const wordInput = document.getElementById('word-input');
+  if (!wordInput) return;
   const typedWord = wordInput.value.trim().toUpperCase();
   wordInput.value = "";
   processPlayerWord(typedWord);
 }
 
-const wordInput = document.getElementById('word-input');
-if (wordInput) {
-  wordInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      submitTypedWord();
-    }
-  });
-}
-
 function processPlayerWord(typedWord) {
   const errorMsg = document.getElementById('error-msg');
-  errorMsg.innerText = "";
+  if (errorMsg) errorMsg.innerText = "";
 
   if (!typedWord) return;
   if (wordsPlayedOnCard >= MAX_WORDS) return;
@@ -188,7 +192,7 @@ function processPlayerWord(typedWord) {
   const cardIndex = playerHand.findIndex(card => card.letter === firstLetter);
 
   if (cardIndex === -1) {
-    errorMsg.innerText = `Non hai la lettera "${firstLetter}" in mano!`;
+    if (errorMsg) errorMsg.innerText = `Non hai la lettera "${firstLetter}" in mano!`;
     return;
   }
 
@@ -221,7 +225,8 @@ function endRoundAndCountLightnings() {
     bot.hand.forEach(c => bot.lightnings += c.lightnings);
   }
 
-  document.getElementById('player-lightnings').innerText = playerLightnings;
+  const playerLightningsEl = document.getElementById('player-lightnings');
+  if (playerLightningsEl) playerLightningsEl.innerText = playerLightnings;
   
   const botLightningsEl = document.getElementById('bot-lightnings');
   if (botLightningsEl && bot.lightnings) {
@@ -252,27 +257,29 @@ function startVoiceRecognition() {
   recognition.maxAlternatives = 1;
 
   const micButton = document.getElementById('btn-mic');
-  micButton.style.background = '#f1c40f';
-  document.getElementById('error-msg').innerText = "🎤 In ascolto...";
+  if (micButton) micButton.style.background = '#f1c40f';
+  
+  const errorMsg = document.getElementById('error-msg');
+  if (errorMsg) errorMsg.innerText = "🎤 In ascolto...";
 
   recognition.start();
 
   recognition.onresult = (event) => {
     const spokenWord = event.results[0][0].transcript.trim().toUpperCase();
-    micButton.style.background = '#e74c3c';
-    document.getElementById('error-msg').innerText = "";
+    if (micButton) micButton.style.background = '#e74c3c';
+    if (errorMsg) errorMsg.innerText = "";
 
     const firstWord = spokenWord.split(" ")[0];
     processPlayerWord(firstWord);
   };
 
   recognition.onerror = () => {
-    micButton.style.background = '#e74c3c';
-    document.getElementById('error-msg').innerText = "Riprova!";
+    if (micButton) micButton.style.background = '#e74c3c';
+    if (errorMsg) errorMsg.innerText = "Riprova!";
   };
 
   recognition.onspeechend = () => {
     recognition.stop();
-    micButton.style.background = '#e74c3c';
+    if (micButton) micButton.style.background = '#e74c3c';
   };
 }
