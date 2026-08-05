@@ -25,7 +25,7 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center; /* Centra tutto verticalmente eliminando il vuoto in basso */
+  justify-content: center;
   gap: 16px;
   padding: 5px 0;
 }
@@ -36,7 +36,6 @@ html, body {
   margin-bottom: 4px;
 }
 
-/* Riquadro regole più grande, spazioso e con font aumentato */
 #home-screen > div:nth-of-type(1) {
   width: 100% !important;
   max-width: 100% !important;
@@ -195,35 +194,13 @@ h1 {
 
 .input-area {
   display: flex;
+  flex-direction: column;
   gap: 6px;
-  justify-content: center;
+  width: 100%;
   align-items: center;
   margin-bottom: 4px;
 }
 
-#word-input {
-  flex: 1;
-  max-width: 180px;
-  padding: 8px;
-  font-size: 0.9rem;
-  border-radius: 16px;
-  border: 2px solid #333;
-  background: #1e1e24;
-  color: #fff;
-  outline: none;
-  text-align: center;
-}
-
-#word-input:focus {
-  border-color: #f39c12;
-}
-
-.error-msg {
-  color: #e74c3c;
-  font-size: 0.7rem;
-  min-height: 14px;
-  font-weight: bold;
-}
 .input-wrapper {
   display: flex;
   flex-direction: column;
@@ -260,4 +237,11 @@ h1 {
 .action-buttons button {
   width: 100%;
   cursor: pointer;
+}
+
+.error-msg {
+  color: #e74c3c;
+  font-size: 0.7rem;
+  min-height: 14px;
+  font-weight: bold;
 }
