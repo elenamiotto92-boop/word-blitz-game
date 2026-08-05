@@ -5,23 +5,28 @@ let isHost = false;
 // 1. L'HOST CREA LA STANZA
 function createRoom() {
   isHost = true;
-  // Genera un ID casuale breve
   const shortId = "blitz-" + Math.floor(1000 + Math.random() * 9000);
   
   peer = new Peer(shortId);
 
   peer.on('open', (id) => {
-    document.getElementById('connection-status').innerText = `Stanza creata! Codice da dare all'amico: ${id}`;
+    document.getElementById('connection-status').innerText = `Stanza creata! Codice: ${id}`;
   });
 
-  // Quando l'amico si collega
   peer.on('connection', (conn) => {
     connection = conn;
-    document.getElementById('connection-status').innerText = "Amico connesso! La partita inizia.";
+    document.getElementById('connection-status').innerText = "Amico connesso! Buon gioco.";
     setupDataListener();
     
-    // L'Host invia all'amico la prima categoria
-    sendData({ type: 'START_GAME', category: currentCategory });
+    // Disattiva il bot perché si gioca in due umani
+    if (typeof bot !== 'undefined') {
+      bot.stopThinking();
+    }
+
+    // Invia subito la categoria iniziale all'amico
+    setTimeout(() => {
+      sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
+    }, 500);
   });
 }
 
@@ -39,6 +44,11 @@ function joinRoom() {
     connection.on('open', () => {
       document.getElementById('connection-status').innerText = `Connesso alla stanza ${targetId}!`;
       setupDataListener();
+      
+      // Disattiva il bot anche per l'ospite
+      if (typeof bot !== 'undefined') {
+        bot.stopThinking();
+      }
     });
   });
 }
@@ -48,14 +58,13 @@ function setupDataListener() {
   connection.on('data', (data) => {
     console.log("Dati ricevuti:", data);
 
-    // Se l'amico gioca una parola
+    // Quando un giocatore lancia una parola
     if (data.type === 'PLAY_WORD') {
-      // Viene mostrata a schermo come parola giocata
-      registerWordPlay(data.word, false, "AMICO");
+      registerWordPlay(data.word, false, isHost ? "AMICO" : "HOST");
     }
 
-    // Se l'Host cambia categoria o inizia la manche
-    if (data.type === 'CHANGE_CATEGORY' && !isHost) {
+    // Quando cambia la categoria (ricevuta dall'host)
+    if (data.type === 'CHANGE_CATEGORY') {
       currentCategory = data.category;
       wordsPlayedOnCard = 0;
       document.getElementById('current-category').innerText = currentCategory;
@@ -65,7 +74,7 @@ function setupDataListener() {
   });
 }
 
-// 4. FUNZIONE PER INVIARE DATI ALL'ALTRO GIOCATORE
+// 4. INVIA DATI ALL'ALTRO GIOCATORE
 function sendData(payload) {
   if (connection && connection.open) {
     connection.send(payload);
