@@ -23,13 +23,15 @@ function createRoom() {
     if (typeof bot !== 'undefined') bot.stopThinking();
 
     setTimeout(() => {
-      // Host avvia il gioco e manda la categoria iniziale all'amico
+      // 1. L'host genera la categoria e avvia la sua schermata
       const categories = Object.keys(DICTIONARY);
       currentCategory = categories[Math.floor(Math.random() * categories.length)];
       
       startMultiplayerGame(currentCategory);
+      
+      // 2. Invia subito il segnale di avvio all'amico (ospite)
       sendData({ type: 'START_MULTIPLAYER', category: currentCategory });
-    }, 1000);
+    }, 800);
   });
 }
 
@@ -44,8 +46,11 @@ function joinRoom() {
     connection = peer.connect(targetId);
     
     connection.on('open', () => {
-      document.getElementById('connection-status').innerText = `Connesso! In attesa dell'Host...`;
+      document.getElementById('connection-status').innerText = `Connesso alla stanza! Sincronizzazione in corso...`;
       if (typeof bot !== 'undefined') bot.stopThinking();
+      
+      // Attiva subito l'ascolto dei dati per ricevere la categoria dall'host
+      setupDataListener();
     });
   });
 }
@@ -66,6 +71,7 @@ function setupDataListener() {
       document.getElementById('words-count').innerText = "0";
     }
 
+    // Ricevuto dall'host: sblocca la schermata anche per l'amico e fa partire il gioco
     if (data.type === 'START_MULTIPLAYER') {
       startMultiplayerGame(data.category);
     }
