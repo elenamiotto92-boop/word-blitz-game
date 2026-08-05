@@ -37,35 +37,27 @@ const LETTERS_POOL = [
   { letter: 'Z', lightnings: 3 }
 ];
 
-// 1. Avvio Modalità Singola (Contro IA)
 function startSinglePlayer() {
   if (typeof DICTIONARY === 'undefined') {
-    alert("Errore: Il dizionario non è stato caricato correttamente!");
+    alert("Errore: dizionario non caricato!");
     return;
   }
   startGameScreen();
-  
   playerHand = drawHand();
   bot.hand = drawHand();
-  
-  const categories = Object.keys(DICTIONARY);
-  currentCategory = categories[Math.floor(Math.random() * categories.length)];
-  
+  pickRandomCategory();
   nextCategoryCard();
 }
 
-// 2. Transizione alla schermata di gioco
 function startGameScreen() {
   document.getElementById('home-screen').style.display = 'none';
-  document.getElementById('game-container').style.display = 'block';
+  document.getElementById('game-container').style.display = 'flex';
   
   const wordInput = document.getElementById('word-input');
   if (wordInput && !wordInput.dataset.listenerAttached) {
     wordInput.dataset.listenerAttached = "true";
     wordInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        submitTypedWord();
-      }
+      if (e.key === 'Enter') submitTypedWord();
     });
   }
 
@@ -74,19 +66,21 @@ function startGameScreen() {
   }
 }
 
-// 3. Avvio Partita in Multiplayer (chiamato da network.js)
 function startMultiplayerGame(initialCategory) {
   startGameScreen();
-  
   playerHand = drawHand();
   if (initialCategory) {
     currentCategory = initialCategory;
   } else {
-    const categories = Object.keys(DICTIONARY);
-    currentCategory = categories[Math.floor(Math.random() * categories.length)];
+    pickRandomCategory();
   }
-  
   nextCategoryCard();
+}
+
+function pickRandomCategory() {
+  if (typeof DICTIONARY === 'undefined') return;
+  const categories = Object.keys(DICTIONARY);
+  currentCategory = categories[Math.floor(Math.random() * categories.length)];
 }
 
 function drawHand() {
@@ -103,17 +97,15 @@ function nextCategoryCard() {
   document.getElementById('played-words').innerHTML = "";
   document.getElementById('words-count').innerText = wordsPlayedOnCard;
   
-  if (!currentCategory && typeof DICTIONARY !== 'undefined') {
-    const categories = Object.keys(DICTIONARY);
-    currentCategory = categories[Math.floor(Math.random() * categories.length)];
+  if (!currentCategory) {
+    pickRandomCategory();
   }
   
   document.getElementById('current-category').innerText = currentCategory;
   renderHand();
 
   if (typeof isHost !== 'undefined' && isHost && typeof sendData === 'function') {
-    const categories = Object.keys(DICTIONARY);
-    currentCategory = categories[Math.floor(Math.random() * categories.length)];
+    pickRandomCategory();
     document.getElementById('current-category').innerText = currentCategory;
     sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
   }
@@ -141,7 +133,6 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
 
   const chip = document.createElement('div');
   chip.className = 'played-chip';
-  
   let label = isPlayer ? "TU" : "BOT";
   if (customName) label = customName;
 
@@ -152,8 +143,7 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
     if (!connection || !connection.open) bot.stopThinking();
     setTimeout(() => {
       if (typeof isHost !== 'undefined' && isHost) {
-        const categories = Object.keys(DICTIONARY);
-        currentCategory = categories[Math.floor(Math.random() * categories.length)];
+        pickRandomCategory();
         sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
       }
       nextCategoryCard();
@@ -181,9 +171,7 @@ function assignPenaltyCard(reasonText) {
   renderHand();
   
   const errorMsg = document.getElementById('error-msg');
-  if (errorMsg) {
-    errorMsg.innerText = `${reasonText} PENALITÀ: carta ${penaltyCard.letter}!`;
-  }
+  if (errorMsg) errorMsg.innerText = `${reasonText} +1 carta!`;
 }
 
 function submitTypedWord() {
@@ -205,7 +193,7 @@ function processPlayerWord(typedWord) {
   const cardIndex = playerHand.findIndex(card => card.letter === firstLetter);
 
   if (cardIndex === -1) {
-    if (errorMsg) errorMsg.innerText = `Non hai la lettera "${firstLetter}" in mano!`;
+    if (errorMsg) errorMsg.innerText = `Non hai la lettera "${firstLetter}"!`;
     return;
   }
 
@@ -233,7 +221,6 @@ function processPlayerWord(typedWord) {
 
 function endRoundAndCountLightnings() {
   playerHand.forEach(c => playerLightnings += c.lightnings);
-  
   if (typeof bot !== 'undefined' && bot.hand) {
     bot.hand.forEach(c => bot.lightnings += c.lightnings);
   }
@@ -258,9 +245,8 @@ function endRoundAndCountLightnings() {
 
 function startVoiceRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  
   if (!SpeechRecognition) {
-    alert("Il tuo browser non supporta i comandi vocali.");
+    alert("Comandi vocali non supportati dal browser.");
     return;
   }
 
@@ -281,9 +267,7 @@ function startVoiceRecognition() {
     const spokenWord = event.results[0][0].transcript.trim().toUpperCase();
     if (micButton) micButton.style.background = '#e74c3c';
     if (errorMsg) errorMsg.innerText = "";
-
-    const firstWord = spokenWord.split(" ")[0];
-    processPlayerWord(firstWord);
+    processPlayerWord(spokenWord.split(" ")[0]);
   };
 
   recognition.onerror = () => {
