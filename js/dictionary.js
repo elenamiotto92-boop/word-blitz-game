@@ -373,6 +373,44 @@ const DICTIONARY = {
     // Z
     "ZAFFIRO", "ZENZERO", "ZOLFO", "ZUCCA"
   ],
+
+"CITTÀ ITALIANE": [
+    // A
+    "AGRIGENTO", "ALESSANDRIA", "ANCONA", "AOSTA", "AQUILA", "LAQUILA", "AREZZO", "ASCOLI", "ASTI", "AVELLINO",
+    // B
+    "BARI", "BARLETTA", "BELLUNO", "BENEVENTO", "BERGAMO", "BIELLA", "BOLOGNA", "BOLZANO", "BRESCIA", "BRINDISI",
+    // C
+    "CAGLIARI", "CALTANISSETTA", "CAMPOBASSO", "CASERTA", "CATANIA", "CATANZARO", "CHIETI", "COMO", "COSENZA", "CREMONA", "CUNEO",
+    // E
+    "ENNA",
+    // F
+    "FERMO", "FERRARA", "FIRENZE", "FOGGIA", "FORLI", "FROSINONE",
+    // G
+    "GENOVA", "GORIZIA", "GROSSETO",
+    // I
+    "IMPERIA", "ISERNIA",
+    // L
+    "LATINA", "LECCE", "LECCO", "LIVORNO", "LODI", "LUCCA",
+    // M
+    "MACERATA", "MANTOVA", "MASSA", "MATERA", "MESSINA", "MILANO", "MODENA", "MONZA",
+    // N
+    "NAPOLI", "NOVARA", "NUORO",
+    // O
+    "ORISTANO",
+    // P
+    "PADOVA", "PALERMO", "PARMA", "PAVIA", "PERUGIA", "PESARO", "PESCARA", "PIACENZA", "PISA", "PISTOIA", "PORDENONE", "POTENZA", "PRATO",
+    // R
+    "RAGUSA", "RAVENNA", "REGGIO", "RIETI", "RIMINI", "ROMA", "ROVIGO",
+    // S
+    "SALERNO", "SASSARI", "SAVONA", "SIENA", "SIRACUSA", "SONDRIO", "SPEZIA", "LASPEZIA",
+    // T
+    "TARANTO", "TERAMO", "TERNI", "TORINO", "TRAPANI", "TRENTO", "TREVISO", "TRIESTE",
+    // U
+    "UDINE",
+    // V
+    "VARESE", "VENEZIA", "VERBANIA", "VERCELLI", "VERONA", "VIBO", "VICENZA", "VITERBO"
+  ],
+  
 // Funzione globale per la validazione automatica
 function validateWord(category, word) {
   const cleanWord = word.trim().toUpperCase();
