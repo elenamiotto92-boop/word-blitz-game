@@ -319,7 +319,60 @@ const DICTIONARY = {
     "Z": ["ZARA", "ZANUSSI", "ZUCCAMELON"]
   }
 };
-
+"COLORI": [
+    // A
+    "ARANCIONE", "AZZURRO", "AMBRA", "ACQUAMARINA", "AMARANTO", "AVORIO", "ARDESIA", "ALBICOCCA", "ARGENTO",
+    // B
+    "BLU", "BIANCO", "BEIGE", "BORDEAUX", "BRONZO", "BISCOTTO", "BIANCOSPINO",
+    // C
+    "CELESTE", "CARAMELLO", "CARMINIO", "CAROTA", "CASTANO", "CERULEO", "CICLAMINO", "CIPRIA", "COBALTO", "CORALLO", "CREMA", "CREMISI",
+    // D
+    "DORATO", "DENIM", "DAMASCO",
+    // E
+    "ECRU", "EMATITE", "EDERA",
+    // F
+    "FUCSIA", "FUMO", "FIORDALISO", "FLUO",
+    // G
+    "GIALLO", "GRIGIO", "GRANATA", "GLICINE", "GIADA", "GRAFITE",
+    // H
+    "HAVANA", "HENNE",
+    // I
+    "INDACO", "IMPERIALE", "IRIDATO",
+    // J
+    "JEANS", "JADE", "JACQUARD",
+    // K
+    "KAKI", "KHAKI", "KLEIN",
+    // L
+    "LILLA", "LIME", "LIMONE", "LAVANDA", "LAPISLAZZULI", "LINO",
+    // M
+    "MARRONE", "MAGENTA", "MOGANO", "MOSTARDA", "MIRTILLO", "MALVA", "MENTA", "METALLIZZATO", "MATTONE", "MODENA",
+    // N
+    "NERO", "NOCCIOLA", "NUDO", "NEON",
+    // O
+    "ORO", "OLIVA", "OLTREMARE", "OTTANIO", "OCRA", "ORCHIDEA", "OPALE",
+    // P
+    "PERLA", "PORPORA", "PESCA", "PAVONE", "PETROLIO", "PANNA", "PRUGNA", "PLATINO",
+    // Q
+    "QUARZO",
+    // R
+    "ROSSO", "ROSA", "RUBINO", "RUGGINE", "RAME",
+    // S
+    "SMERALDO", "SABBIA", "SALMONE", "SENAPE", "SALVIA", "SCARLATTO", "SEPPIA",
+    // T
+    "TURCHESE", "TERRACOTTA", "TORTORA", "TABACCO", "TIZIANO", "TEAL",
+    // U
+    "UVA", "ULTRAMARINO",
+    // V
+    "VERDE", "VIOLA", "VIOLETTO", "VERMILIONE", "VINACCIA", "VANIGLIA", "VERDONE",
+    // W
+    "WENGE", "WASABI",
+    // X
+    "XANTICO",
+    // Y
+    "YELLOW", "YALE",
+    // Z
+    "ZAFFIRO", "ZENZERO", "ZOLFO", "ZUCCA"
+  ],
 // Funzione globale per la validazione automatica
 function validateWord(category, word) {
   const cleanWord = word.trim().toUpperCase();
