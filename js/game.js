@@ -77,10 +77,27 @@ function startMultiplayerGame(initialCategory) {
   nextCategoryCard();
 }
 
-function pickRandomCategory() {
-  if (typeof DICTIONARY === 'undefined') return;
-  const categories = Object.keys(DICTIONARY);
-  currentCategory = categories[Math.floor(Math.random() * categories.length)];
+function startSinglePlayer() {
+  if (typeof DICTIONARY === 'undefined') {
+    alert("Errore: dizionario non caricato!");
+    return;
+  }
+  startGameScreen();
+  pickRandomCategory(); // Seleziona prima la categoria per bilanciare le carte
+  playerHand = drawHand();
+  bot.hand = drawHand();
+  nextCategoryCard();
+}
+
+function startMultiplayerGame(initialCategory) {
+  startGameScreen();
+  if (initialCategory) {
+    currentCategory = initialCategory;
+  } else {
+    pickRandomCategory();
+  }
+  playerHand = drawHand(); // Pescata bilanciata in base alla categoria
+  nextCategoryCard();
 }
 
 function drawHand() {
