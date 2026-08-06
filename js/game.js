@@ -85,10 +85,40 @@ function pickRandomCategory() {
 
 function drawHand() {
   const hand = [];
+  
+  // Assicurati che una categoria sia selezionata per calcolare le risposte disponibili
+  if (!currentCategory && typeof pickRandomCategory === 'function') {
+    pickRandomCategory();
+  }
+
+  // Mappa di quante parole iniziano con ogni lettera nella categoria corrente
+  const letterCounts = {};
+  let hasCategoryRestriction = false;
+
+  if (typeof DICTIONARY !== 'undefined' && DICTIONARY[currentCategory]) {
+    hasCategoryRestriction = true;
+    DICTIONARY[currentCategory].forEach(word => {
+      const firstChar = word.charAt(0).toUpperCase();
+      letterCounts[firstChar] = (letterCounts[firstChar] || 0) + 1;
+    });
+  }
+
   for (let i = 0; i < HAND_SIZE; i++) {
-    const randomCard = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
+    // Tieni solo lettere che hanno parole disponibili e non superano il totale di risposte per quella lettera
+    const validPool = LETTERS_POOL.filter(card => {
+      if (!hasCategoryRestriction) return true;
+      const maxAvailable = letterCounts[card.letter] || 0;
+      const alreadyInHand = hand.filter(c => c.letter === card.letter).length;
+      return alreadyInHand < maxAvailable;
+    });
+
+    // Fallback di sicurezza nel caso rarissimo in cui finiscano le lettere disponibili
+    const poolToUse = validPool.length > 0 ? validPool : LETTERS_POOL;
+    const randomCard = poolToUse[Math.floor(Math.random() * poolToUse.length)];
+    
     hand.push({ ...randomCard, id: Math.random() });
   }
+  
   return hand;
 }
 
