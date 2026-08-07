@@ -1,6 +1,9 @@
 const MAX_WORDS = 3;
 const MAX_LIGHTNINGS = 40;
 const HAND_SIZE = 7;
+let gameMode = 'VICINI'; // Default
+let lastPlayerId = null; // Per sapere a chi dare la carta di penalità se contestato
+let lastPlayedWord = "";
 
 let currentCategory = "";
 let wordsPlayedOnCard = 0;
@@ -166,12 +169,25 @@ function renderHand() {
   const handEl = document.getElementById('player-hand');
   if (!handEl) return;
   handEl.innerHTML = "";
-  playerHand.forEach(card => {
+  
+  playerHand.forEach((card, index) => {
     const cardDiv = document.createElement('div');
-    cardDiv.className = 'card';
+    cardDiv.className = gameMode === 'VICINI' ? 'card clickable' : 'card';
     cardDiv.innerHTML = `${card.letter}<span class="lightning">⚡ ${card.lightnings}</span>`;
+    
+    // In modalità Vicini, cliccare la carta la lancia al centro
+    if (gameMode === 'VICINI') {
+      cardDiv.onclick = () => playCardLocal(index);
+    }
+    
     handEl.appendChild(cardDiv);
   });
+
+  // Nascondi o mostra la casella di testo in base alla modalità
+  const inputWrapper = document.querySelector('.input-wrapper');
+  if (inputWrapper) {
+    inputWrapper.style.display = gameMode === 'VICINI' ? 'none' : 'flex';
+  }
 }
 
 function registerWordPlay(word, isPlayer = true, customName = null) {
@@ -305,7 +321,96 @@ function startVoiceRecognition() {
     alert("Comandi vocali non supportati dal browser.");
     return;
   }
+function selectGameMode(mode) {
+  gameMode = mode;
+  document.getElementById('multiplayer-setup').style.display = 'block';
+  const labelEl = document.getElementById('selected-mode-label');
+  if (mode === 'VICINI') {
+    labelEl.innerText = "📍 Modalità: SIAMO VICINI (Tocca la carta e parla)";
+  } else {
+    labelEl.innerText = "🌍 Modalità: SIAMO LONTANI (Scrivi e verifica)";
+  }
+}
+  // MODALITÀ VICINI: Clicchi la carta, si ingrandisce al centro e la dici a voce
+function playCardLocal(cardIndex) {
+  if (wordsPlayedOnCard >= MAX_WORDS) return;
 
+  const card = playerHand[cardIndex];
+  playerHand.splice(cardIndex, 1);
+  renderHand();
+
+  showCenterStage(card.letter, "Hai giocato la lettera: DICI LA PAROLA A VOCE!");
+  lastPlayerId = "TU";
+
+  if (typeof sendData === 'function' && connection && connection.open) {
+    sendData({ type: 'PLAY_CARD_STAGE', letter: card.letter });
+  }
+
+  registerWordPlay(`[LETTERA ${card.letter}]`, true);
+}
+
+// MODALITÀ LONTANI: Scrivi senza controllo IA, con link a Google per verifica
+function processPlayerWord(typedWord) {
+  const errorMsg = document.getElementById('error-msg');
+  if (errorMsg) errorMsg.innerText = "";
+  if (!typedWord || wordsPlayedOnCard >= MAX_WORDS) return;
+
+  const firstLetter = typedWord.charAt(0);
+  const cardIndex = playerHand.findIndex(card => card.letter === firstLetter);
+
+  if (cardIndex === -1) {
+    if (errorMsg) errorMsg.innerText = `Non hai la lettera "${firstLetter}" in mano!`;
+    return;
+  }
+
+  // NESSUN CONTROLLO IA: Si accetta qualsiasi parola scritta!
+  playerHand.splice(cardIndex, 1);
+  renderHand();
+
+  lastPlayedWord = typedWord;
+  showCenterStage(firstLetter, `Parola giocata: "${typedWord}"`);
+  lastPlayerId = "TU";
+
+  registerWordPlay(typedWord, true);
+
+  if (typeof sendData === 'function' && connection && connection.open) {
+    sendData({ type: 'PLAY_WORD_REMOTE', word: typedWord, letter: firstLetter });
+  }
+}
+
+// Mostra la carta gigante al centro e il tasto Google (se in Lontani)
+function showCenterStage(letter, infoText) {
+  const stage = document.getElementById('center-stage');
+  const zoomedCard = document.getElementById('zoomed-card');
+  const infoEl = document.getElementById('last-play-info');
+  const googleBtn = document.getElementById('btn-google-check');
+
+  stage.style.display = 'block';
+  zoomedCard.innerText = letter;
+  infoEl.innerText = infoText;
+
+  if (gameMode === 'LONTANI' && lastPlayedWord) {
+    googleBtn.style.display = 'inline-block';
+    googleBtn.href = `https://www.google.com/search?q=significato+${encodeURIComponent(lastPlayedWord)}`;
+  } else {
+    googleBtn.style.display = 'none';
+  }
+}
+
+// CONTESTAZIONE: Chi ha giocato l'ultima carta prende +1 penalità
+function contestLastPlay() {
+  if (typeof sendData === 'function' && connection && connection.open) {
+    sendData({ type: 'CONTEST_PLAY' });
+  }
+
+  // Se l'ultima giocata era la tua, prendi la penalità
+  if (lastPlayerId === "TU") {
+    assignPenaltyCard("Contestazione accettata!");
+  } else {
+    const errorMsg = document.getElementById('error-msg');
+    if (errorMsg) errorMsg.innerText = "Hai contestato! L'avversario pesca +1 carta.";
+  }
+}
   const recognition = new SpeechRecognition();
   recognition.lang = 'it-IT';
   recognition.interimResults = false;
