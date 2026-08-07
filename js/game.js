@@ -1,3 +1,26 @@
+let gameMode = 'VICINI'; // Default
+let lastPlayerId = null;
+let lastPlayedWord = "";
+
+function selectGameMode(mode) {
+  gameMode = mode;
+  
+  // Rende visibile il riquadro con "Crea Stanza", il codice e "Unisciti"
+  const setupBox = document.getElementById('multiplayer-setup');
+  if (setupBox) {
+    setupBox.style.display = 'block';
+  }
+
+  // Aggiorna la scritta che conferma la modalità scelta
+  const labelEl = document.getElementById('selected-mode-label');
+  if (labelEl) {
+    if (mode === 'VICINI') {
+      labelEl.innerText = "📍 Modalità: SIAMO VICINI (Tocca la carta e parla)";
+    } else {
+      labelEl.innerText = "🌍 Modalità: SIAMO LONTANI (Scrivi e verifica)";
+    }
+  }
+}
 const MAX_WORDS = 3;
 const MAX_LIGHTNINGS = 40;
 const HAND_SIZE = 7;
