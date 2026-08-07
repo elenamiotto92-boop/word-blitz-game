@@ -1,10 +1,10 @@
-<!DOCTYPE html>   
+<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Word Blitz - GitHub Edition</title>
- <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/style.css?v=4">
 </head>
 <body>
 
@@ -17,19 +17,23 @@
     <div style="background: #1e1e24; padding: 12px; border: 1px solid #f39c12; border-radius: 8px; margin-bottom: 15px; text-align: left; font-size: 0.85rem; line-height: 1.4;">
       <h3 style="color: #f1c40f; margin-bottom: 6px; text-align: center;">📖 Regole del Gioco</h3>
       <p>• 7 carte lettera in mano.</p>
-      <p>• Scarta una lettera dicendo una parola valida della categoria.</p>
+      <p>• Scarta una lettera dicendo o scrivendo una parola della categoria.</p>
       <p>• Max 3 parole per categoria, poi si cambia.</p>
+      <p>• Contesta le parole dubbie: chi sbaglia prende +1 carta!</p>
       <p>• Chi arriva a <strong>40 fulmini</strong> di penalità perde!</p>
     </div>
 
-    <h3 style="margin-bottom: 10px; font-size: 0.95rem;">Scegli la modalità:</h3>
+    <h3 style="margin-bottom: 10px; font-size: 0.95rem;">Scegli la modalità Amici:</h3>
     
+    <!-- SCELTA MODALITÀ: VICINI O LONTANI -->
     <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
-      <button onclick="startSinglePlayer()" style="background: #2980b9; color: white; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; cursor: pointer;">🤖 Contro IA</button>
-      <button onclick="showMultiplayerSetup()" style="background: #27ae60; color: white; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; cursor: pointer;">👥 Con un Amico</button>
+      <button onclick="selectGameMode('VICINI')" style="background: #27ae60; color: white; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; cursor: pointer;">📍 Siamo Vicini (A voce)</button>
+      <button onclick="selectGameMode('LONTANI')" style="background: #2980b9; color: white; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; cursor: pointer;">🌍 Siamo Lontani (Testo)</button>
     </div>
 
+    <!-- SETUP MULTIPLAYER -->
     <div id="multiplayer-setup" style="display: none; margin-top: 15px; padding-top: 10px; border-top: 1px solid #444; width: 100%;">
+      <p id="selected-mode-label" style="color: #f1c40f; font-size: 0.85rem; margin-bottom: 8px; font-weight: bold;"></p>
       <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
         <button onclick="createRoom()" style="background: #e67e22; color: white; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; font-size: 0.85rem; cursor: pointer;">Crea Stanza</button>
         <input type="text" id="room-code-input" placeholder="Codice..." style="padding: 6px; width: 100px; text-align: center; border-radius: 5px; border: none; font-size: 0.85rem;">
@@ -45,7 +49,7 @@
       <h1>⚡ WORD BLITZ ⚡</h1>
       <div id="status-bar">
         <span>I tuoi fulmini: <strong id="player-lightnings">0</strong> / 40</span>
-       <span id="opponent-status-container">Fulmini avversario: <strong id="bot-lightnings">0</strong> / 40</span>
+        <span id="opponent-status-container">Fulmini avversario: <strong id="bot-lightnings">0</strong> / 40</span>
       </div>
     </header>
 
@@ -59,26 +63,41 @@
         <div id="played-words" class="played-words"></div>
       </section>
 
+      <!-- CARTA INGRANDITA AL CENTRO E TASTI CONTESTA / GOOGLE -->
+      <div id="center-stage" style="display: none; margin: 10px 0; text-align: center; width: 100%;">
+        <div id="zoomed-card" class="zoomed-card">?</div>
+        <p id="last-play-info" style="font-size: 0.85rem; color: #f1c40f; margin-top: 6px; font-weight: bold;"></p>
+        
+        <div style="display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap;">
+          <button onclick="contestLastPlay()" style="background: #c0392b; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; cursor: pointer;">⚠️ CONTESTA</button>
+          <a id="btn-google-check" href="#" target="_blank" style="display: none; background: #34495e; color: white; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; font-size: 0.85rem;">🔍 Verifica su Google</a>
+        </div>
+      </div>
+
       <section class="player-area">
         <h3>LA TUA MANO</h3>
         <div id="player-hand" class="hand"></div>
-<div class="input-wrapper">
-  <input 
-    type="text" 
-    id="word-input" 
-    placeholder="Scrivi parola..." 
-    autocomplete="off" 
-    autocorrect="off" 
-    autocapitalize="characters" 
-    spellcheck="false"
-  >
-  <div class="action-buttons">
-    <button onclick="submitTypedWord()" style="background: #27ae60; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer;">INVIA</button>
-    <button id="btn-mic" onclick="startVoiceRecognition()" style="background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 8px; font-size: 1.2rem; cursor: pointer;" title="Voce">🎙️</button>
+        <div class="input-wrapper">
+          <input 
+            type="text" 
+            id="word-input" 
+            placeholder="Scrivi parola..." 
+            autocomplete="off" 
+            autocorrect="off" 
+            autocapitalize="characters" 
+            spellcheck="false"
+          >
+          <div class="action-buttons">
+            <button onclick="submitTypedWord()" style="background: #27ae60; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer;">INVIA</button>
+            <button id="btn-mic" onclick="startVoiceRecognition()" style="background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 8px; font-size: 1.2rem; cursor: pointer;" title="Voce">🎙️</button>
+            <button onclick="changeCategoryWithPenalty()" style="background: #e67e22; color: white; border: none; padding: 8px; border-radius: 8px; font-weight: bold; font-size: 0.8rem; cursor: pointer; margin-top: 2px;">🔄 CAMBIA CATEGORIA (+1 CARTA)</button>
+          </div>
+          <div id="error-msg" class="error-msg"></div>
+        </div>
+      </section>
+    </main>
   </div>
-  <div id="error-msg" class="error-msg"></div>
-</div>
-       
+        
   <script src="js/dictionary.js"></script>
   <script src="js/bot.js"></script>
   <script src="js/network.js"></script>
