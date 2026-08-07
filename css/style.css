@@ -245,3 +245,39 @@ h1 {
   min-height: 14px;
   font-weight: bold;
 }
+
+/* Stile per la carta gigante al centro dello schermo */
+.zoomed-card {
+  background: linear-gradient(135deg, #f1c40f, #f39c12);
+  color: #111;
+  width: 90px;
+  height: 130px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-weight: 900;
+  font-size: 3.5rem;
+  margin: 0 auto;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+  border: 3px solid #fff;
+  animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Carte della mano cliccabili in modalità "Siamo Vicini" */
+.card.clickable {
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+  border: 2px solid transparent;
+}
+
+.card.clickable:hover {
+  transform: translateY(-5px);
+  border-color: #f1c40f;
+}
