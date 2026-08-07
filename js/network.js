@@ -29,8 +29,12 @@ function createRoom() {
       
       startMultiplayerGame(currentCategory);
       
-      // 2. Invia subito il segnale di avvio all'amico (ospite)
-      sendData({ type: 'START_MULTIPLAYER', category: currentCategory });
+      // 2. Invia subito il segnale di avvio all'amico con la categoria e la MODALITÀ scelta (VICINI o LONTANI)
+      sendData({ 
+        type: 'START_MULTIPLAYER', 
+        category: currentCategory,
+        mode: gameMode 
+      });
     }, 800);
   });
 }
@@ -49,7 +53,7 @@ function joinRoom() {
       document.getElementById('connection-status').innerText = `Connesso alla stanza! Sincronizzazione in corso...`;
       if (typeof bot !== 'undefined') bot.stopThinking();
       
-      // Attiva subito l'ascolto dei dati per ricevere la categoria dall'host
+      // Attiva subito l'ascolto dei dati per ricevere categoria e modalità dall'host
       setupDataListener();
     });
   });
@@ -59,24 +63,63 @@ function setupDataListener() {
   if (!connection) return;
 
   connection.on('data', (data) => {
-    if (data.type === 'PLAY_WORD') {
-      // Quando l'amico gioca una parola, sul tuo schermo compare come "AMICO" o nome avversario
+    // RICEZIONE AVVIO PARTITA
+    if (data.type === 'START_MULTIPLAYER') {
+      if (data.mode) {
+        gameMode = data.mode; // Sincronizza la modalità del gioco (VICINI / LONTANI)
+      }
+      startMultiplayerGame(data.category);
+    }
+
+    // MODALITÀ VICINI: L'avversario ha premuto una carta lettera (dichiara la parola a voce)
+    if (data.type === 'PLAY_CARD_STAGE') {
+      showCenterStage(data.letter, "L'avversario ha giocato questa lettera (ha parlato a voce)");
+      lastPlayerId = "AVVERSARIO";
+      registerWordPlay(`[LETTERA ${data.letter}]`, false, isHost ? "AMICO" : "HOST");
+    }
+
+    // MODALITÀ LONTANI: L'avversario ha scritto una parola (senza controllo IA)
+    if (data.type === 'PLAY_WORD_REMOTE') {
+      lastPlayedWord = data.word;
+      showCenterStage(data.letter, `L'avversario ha scritto: "${data.word}"`);
+      lastPlayerId = "AVVERSARIO";
       registerWordPlay(data.word, false, isHost ? "AMICO" : "HOST");
     }
 
+    // GESTIONE CONTESTAZIONI: L'avversario ha premuto il tasto "CONTESTA"
+    if (data.type === 'CONTEST_PLAY') {
+      if (lastPlayerId === "TU") {
+        assignPenaltyCard("L'avversario ha contestato la tua parola!");
+      }
+    }
+
+    // CAMBIO CATEGORIA CON PENALITÀ: L'avversario ha premuto "Cambia Categoria (+1 Carta)"
+    if (data.type === 'PENALTY_CARD_BOTH') {
+      const penaltyCard = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
+      playerHand.push({ ...penaltyCard, id: Math.random() });
+      renderHand();
+      const errorMsg = document.getElementById('error-msg');
+      if (errorMsg) errorMsg.innerText = "L'avversario ha cambiato categoria! +1 carta a testa.";
+    }
+
+    // CAMBIO CATEGORIA REGOLARE
     if (data.type === 'CHANGE_CATEGORY') {
       currentCategory = data.category;
       wordsPlayedOnCard = 0;
-      document.getElementById('current-category').innerText = currentCategory;
-      document.getElementById('played-words').innerHTML = "";
-      document.getElementById('words-count').innerText = "0";
-    }
-
-    if (data.type === 'START_MULTIPLAYER') {
-      startMultiplayerGame(data.category);
+      const catEl = document.getElementById('current-category');
+      if (catEl) catEl.innerText = currentCategory;
+      const playedEl = document.getElementById('played-words');
+      if (playedEl) playedEl.innerHTML = "";
+      const countEl = document.getElementById('words-count');
+      if (countEl) countEl.innerText = "0";
+      
+      // Nascondi la carta centrale quando cambia la categoria
+      const stage = document.getElementById('center-stage');
+      if (stage) stage.style.display = 'none';
     }
   });
 }
+
 function sendData(payload) {
   if (connection && connection.open) {
     connection.send(payload);
