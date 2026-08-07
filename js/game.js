@@ -1,31 +1,12 @@
-let gameMode = 'VICINI'; // Default
-let lastPlayerId = null;
-let lastPlayedWord = "";
-
-function selectGameMode(mode) {
-  gameMode = mode;
-  
-  // Rende visibile il riquadro con "Crea Stanza", il codice e "Unisciti"
-  const setupBox = document.getElementById('multiplayer-setup');
-  if (setupBox) {
-    setupBox.style.display = 'block';
-  }
-
-  // Aggiorna la scritta che conferma la modalità scelta
-  const labelEl = document.getElementById('selected-mode-label');
-  if (labelEl) {
-    if (mode === 'VICINI') {
-      labelEl.innerText = "📍 Modalità: SIAMO VICINI (Tocca la carta e parla)";
-    } else {
-      labelEl.innerText = "🌍 Modalità: SIAMO LONTANI (Scrivi e verifica)";
-    }
-  }
-}
+// ==========================================
+// CONFIGURAZIONE E VARIABILI GLOBALI
+// ==========================================
 const MAX_WORDS = 3;
 const MAX_LIGHTNINGS = 40;
 const HAND_SIZE = 7;
-let gameMode = 'VICINI'; // Default
-let lastPlayerId = null; // Per sapere a chi dare la carta di penalità se contestato
+
+let gameMode = 'VICINI'; // Default ('VICINI' o 'LONTANI')
+let lastPlayerId = null; // Per sapere a chi dare la penalità se contestato
 let lastPlayedWord = "";
 
 let currentCategory = "";
@@ -63,18 +44,30 @@ const LETTERS_POOL = [
   { letter: 'Z', lightnings: 3 }
 ];
 
-function startSinglePlayer() {
-  if (typeof DICTIONARY === 'undefined') {
-    alert("Errore: dizionario non caricato!");
-    return;
+// ==========================================
+// SCELTA MODALITÀ (MENU PRINCIPALE)
+// ==========================================
+function selectGameMode(mode) {
+  gameMode = mode;
+  
+  const setupBox = document.getElementById('multiplayer-setup');
+  if (setupBox) {
+    setupBox.style.display = 'block';
   }
-  startGameScreen();
-  playerHand = drawHand();
-  bot.hand = drawHand();
-  pickRandomCategory();
-  nextCategoryCard();
+
+  const labelEl = document.getElementById('selected-mode-label');
+  if (labelEl) {
+    if (mode === 'VICINI') {
+      labelEl.innerText = "📍 Modalità: SIAMO VICINI (Tocca la carta e parla)";
+    } else {
+      labelEl.innerText = "🌍 Modalità: SIAMO LONTANI (Scrivi e verifica)";
+    }
+  }
 }
 
+// ==========================================
+// AVVIO PARTITA
+// ==========================================
 function startGameScreen() {
   document.getElementById('home-screen').style.display = 'none';
   document.getElementById('game-container').style.display = 'flex';
@@ -92,24 +85,13 @@ function startGameScreen() {
   }
 }
 
-function startMultiplayerGame(initialCategory) {
-  startGameScreen();
-  playerHand = drawHand();
-  if (initialCategory) {
-    currentCategory = initialCategory;
-  } else {
-    pickRandomCategory();
-  }
-  nextCategoryCard();
-}
-
 function startSinglePlayer() {
   if (typeof DICTIONARY === 'undefined') {
     alert("Errore: dizionario non caricato!");
     return;
   }
   startGameScreen();
-  pickRandomCategory(); // Seleziona prima la categoria per bilanciare le carte
+  pickRandomCategory();
   playerHand = drawHand();
   bot.hand = drawHand();
   nextCategoryCard();
@@ -122,19 +104,20 @@ function startMultiplayerGame(initialCategory) {
   } else {
     pickRandomCategory();
   }
-  playerHand = drawHand(); // Pescata bilanciata in base alla categoria
+  playerHand = drawHand();
   nextCategoryCard();
 }
 
+// ==========================================
+// GESTIONE CARTE E CATEGORIE
+// ==========================================
 function drawHand() {
   const hand = [];
   
-  // Assicurati che una categoria sia selezionata per calcolare le risposte disponibili
   if (!currentCategory && typeof pickRandomCategory === 'function') {
     pickRandomCategory();
   }
 
-  // Mappa di quante parole iniziano con ogni lettera nella categoria corrente
   const letterCounts = {};
   let hasCategoryRestriction = false;
 
@@ -147,7 +130,6 @@ function drawHand() {
   }
 
   for (let i = 0; i < HAND_SIZE; i++) {
-    // Tieni solo lettere che hanno parole disponibili e non superano il totale di risposte per quella lettera
     const validPool = LETTERS_POOL.filter(card => {
       if (!hasCategoryRestriction) return true;
       const maxAvailable = letterCounts[card.letter] || 0;
@@ -155,7 +137,6 @@ function drawHand() {
       return alreadyInHand < maxAvailable;
     });
 
-    // Fallback di sicurezza nel caso rarissimo in cui finiscano le lettere disponibili
     const poolToUse = validPool.length > 0 ? validPool : LETTERS_POOL;
     const randomCard = poolToUse[Math.floor(Math.random() * poolToUse.length)];
     
@@ -167,19 +148,22 @@ function drawHand() {
 
 function nextCategoryCard() {
   wordsPlayedOnCard = 0;
-  document.getElementById('played-words').innerHTML = "";
-  document.getElementById('words-count').innerText = wordsPlayedOnCard;
+  const playedEl = document.getElementById('played-words');
+  if (playedEl) playedEl.innerHTML = "";
+  
+  const countEl = document.getElementById('words-count');
+  if (countEl) countEl.innerText = wordsPlayedOnCard;
   
   if (!currentCategory) {
     pickRandomCategory();
   }
   
-  document.getElementById('current-category').innerText = currentCategory;
+  const catEl = document.getElementById('current-category');
+  if (catEl) catEl.innerText = currentCategory;
+  
   renderHand();
 
   if (typeof isHost !== 'undefined' && isHost && typeof sendData === 'function') {
-    pickRandomCategory();
-    document.getElementById('current-category').innerText = currentCategory;
     sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
   }
 
@@ -198,7 +182,6 @@ function renderHand() {
     cardDiv.className = gameMode === 'VICINI' ? 'card clickable' : 'card';
     cardDiv.innerHTML = `${card.letter}<span class="lightning">⚡ ${card.lightnings}</span>`;
     
-    // In modalità Vicini, cliccare la carta la lancia al centro
     if (gameMode === 'VICINI') {
       cardDiv.onclick = () => playCardLocal(index);
     }
@@ -206,7 +189,6 @@ function renderHand() {
     handEl.appendChild(cardDiv);
   });
 
-  // Nascondi o mostra la casella di testo in base alla modalità
   const inputWrapper = document.querySelector('.input-wrapper');
   if (inputWrapper) {
     inputWrapper.style.display = gameMode === 'VICINI' ? 'none' : 'flex';
@@ -214,9 +196,9 @@ function renderHand() {
 }
 
 function registerWordPlay(word, isPlayer = true, customName = null) {
-  // Evita di registrare due volte la stessa parola se arriva via rete
   wordsPlayedOnCard++;
-  document.getElementById('words-count').innerText = wordsPlayedOnCard;
+  const countEl = document.getElementById('words-count');
+  if (countEl) countEl.innerText = wordsPlayedOnCard;
 
   const chip = document.createElement('div');
   chip.className = 'played-chip';
@@ -225,15 +207,16 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
   if (customName) label = customName;
 
   chip.innerText = `${word.toUpperCase()} (${label})`;
-  document.getElementById('played-words').appendChild(chip);
-if (wordsPlayedOnCard >= MAX_WORDS) {
+  
+  const playedWordsEl = document.getElementById('played-words');
+  if (playedWordsEl) playedWordsEl.appendChild(chip);
+
+  if (wordsPlayedOnCard >= MAX_WORDS) {
     if (!connection || !connection.open) bot.stopThinking();
     setTimeout(() => {
-      // Genera sempre una nuova categoria localmente
       const categories = Object.keys(DICTIONARY);
       currentCategory = categories[Math.floor(Math.random() * categories.length)];
       
-      // Se siamo in multiplayer e siamo l'host, invia il cambio all'avversario
       if (typeof isHost !== 'undefined' && isHost && connection && connection.open) {
         sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
       }
@@ -242,12 +225,31 @@ if (wordsPlayedOnCard >= MAX_WORDS) {
     }, 1200);
   }
 }
+
+// ==========================================
+// MODALITÀ "SIAMO VICINI" E "SIAMO LONTANI"
+// ==========================================
+function playCardLocal(cardIndex) {
+  if (wordsPlayedOnCard >= MAX_WORDS) return;
+
+  const card = playerHand[cardIndex];
+  playerHand.splice(cardIndex, 1);
+  renderHand();
+
+  showCenterStage(card.letter, "Hai giocato la lettera: DICI LA PAROLA A VOCE!");
+  lastPlayerId = "TU";
+
+  if (typeof sendData === 'function' && connection && connection.open) {
+    sendData({ type: 'PLAY_CARD_STAGE', letter: card.letter });
+  }
+
+  registerWordPlay(`[LETTERA ${card.letter}]`, true);
+}
+
 function processPlayerWord(typedWord) {
   const errorMsg = document.getElementById('error-msg');
   if (errorMsg) errorMsg.innerText = "";
-
-  if (!typedWord) return;
-  if (wordsPlayedOnCard >= MAX_WORDS) return;
+  if (!typedWord || wordsPlayedOnCard >= MAX_WORDS) return;
 
   const firstLetter = typedWord.charAt(0);
   const cardIndex = playerHand.findIndex(card => card.letter === firstLetter);
@@ -257,21 +259,18 @@ function processPlayerWord(typedWord) {
     return;
   }
 
-  if (!validateWord(currentCategory, typedWord)) {
-    assignPenaltyCard(`"${typedWord}" non valida!`);
-    return;
-  }
-
-  // Rimuovi la carta dalla mano locale
+  // Nessun controllo IA in modalità amici: si accetta qualsiasi parola scritta!
   playerHand.splice(cardIndex, 1);
   renderHand();
-  
-  // Registra sul proprio schermo come "TU"
+
+  lastPlayedWord = typedWord;
+  showCenterStage(firstLetter, `Parola giocata: "${typedWord}"`);
+  lastPlayerId = "TU";
+
   registerWordPlay(typedWord, true);
 
-  // Invia all'amico specificando che per lui sei l'avversario
-  if (typeof sendData === 'function') {
-    sendData({ type: 'PLAY_WORD', word: typedWord });
+  if (typeof sendData === 'function' && connection && connection.open) {
+    sendData({ type: 'PLAY_WORD_REMOTE', word: typedWord, letter: firstLetter });
   }
 
   if (playerHand.length === 0) {
@@ -282,6 +281,71 @@ function processPlayerWord(typedWord) {
     }, 500);
   }
 }
+
+function showCenterStage(letter, infoText) {
+  const stage = document.getElementById('center-stage');
+  const zoomedCard = document.getElementById('zoomed-card');
+  const infoEl = document.getElementById('last-play-info');
+  const googleBtn = document.getElementById('btn-google-check');
+
+  if (stage) stage.style.display = 'block';
+  if (zoomedCard) zoomedCard.innerText = letter;
+  if (infoEl) infoEl.innerText = infoText;
+
+  if (googleBtn) {
+    if (gameMode === 'LONTANI' && lastPlayedWord) {
+      googleBtn.style.display = 'inline-block';
+      googleBtn.href = `https://www.google.com/search?q=significato+${encodeURIComponent(lastPlayedWord)}`;
+    } else {
+      googleBtn.style.display = 'none';
+    }
+  }
+}
+
+function contestLastPlay() {
+  if (typeof sendData === 'function' && connection && connection.open) {
+    sendData({ type: 'CONTEST_PLAY' });
+  }
+
+  if (lastPlayerId === "TU") {
+    assignPenaltyCard("Contestazione accettata!");
+  } else {
+    const errorMsg = document.getElementById('error-msg');
+    if (errorMsg) errorMsg.innerText = "Hai contestato! L'avversario pesca +1 carta.";
+  }
+}
+
+function changeCategoryWithPenalty() {
+  const penaltyCardPlayer = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
+  playerHand.push({ ...penaltyCardPlayer, id: Math.random() });
+  renderHand();
+
+  if (!connection || !connection.open) {
+    if (typeof bot !== 'undefined' && bot.hand) {
+      const penaltyCardBot = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
+      bot.hand.push({ ...penaltyCardBot, id: Math.random() });
+    }
+    bot.stopThinking();
+  } else if (typeof sendData === 'function') {
+    sendData({ type: 'PENALTY_CARD_BOTH' });
+  }
+
+  const errorMsg = document.getElementById('error-msg');
+  if (errorMsg) errorMsg.innerText = "Categoria cambiata! +1 carta a testa.";
+
+  const categories = Object.keys(DICTIONARY);
+  currentCategory = categories[Math.floor(Math.random() * categories.length)];
+
+  if (typeof isHost !== 'undefined' && isHost && connection && connection.open) {
+    sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
+  }
+
+  nextCategoryCard();
+}
+
+// ==========================================
+// BOT, PENALITÀ E FINE TURNI
+// ==========================================
 function handleBotPlay(card, word) {
   if (wordsPlayedOnCard >= MAX_WORDS) return;
   bot.hand = bot.hand.filter(c => c.id !== card.id);
@@ -313,7 +377,6 @@ function submitTypedWord() {
   processPlayerWord(typedWord);
 }
 
-
 function endRoundAndCountLightnings() {
   playerHand.forEach(c => playerLightnings += c.lightnings);
   if (typeof bot !== 'undefined' && bot.hand) {
@@ -338,102 +401,16 @@ function endRoundAndCountLightnings() {
   }
 }
 
+// ==========================================
+// COMANDI VOCALI (MICROFONO)
+// ==========================================
 function startVoiceRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
     alert("Comandi vocali non supportati dal browser.");
     return;
   }
-function selectGameMode(mode) {
-  gameMode = mode;
-  document.getElementById('multiplayer-setup').style.display = 'block';
-  const labelEl = document.getElementById('selected-mode-label');
-  if (mode === 'VICINI') {
-    labelEl.innerText = "📍 Modalità: SIAMO VICINI (Tocca la carta e parla)";
-  } else {
-    labelEl.innerText = "🌍 Modalità: SIAMO LONTANI (Scrivi e verifica)";
-  }
-}
-  // MODALITÀ VICINI: Clicchi la carta, si ingrandisce al centro e la dici a voce
-function playCardLocal(cardIndex) {
-  if (wordsPlayedOnCard >= MAX_WORDS) return;
 
-  const card = playerHand[cardIndex];
-  playerHand.splice(cardIndex, 1);
-  renderHand();
-
-  showCenterStage(card.letter, "Hai giocato la lettera: DICI LA PAROLA A VOCE!");
-  lastPlayerId = "TU";
-
-  if (typeof sendData === 'function' && connection && connection.open) {
-    sendData({ type: 'PLAY_CARD_STAGE', letter: card.letter });
-  }
-
-  registerWordPlay(`[LETTERA ${card.letter}]`, true);
-}
-
-// MODALITÀ LONTANI: Scrivi senza controllo IA, con link a Google per verifica
-function processPlayerWord(typedWord) {
-  const errorMsg = document.getElementById('error-msg');
-  if (errorMsg) errorMsg.innerText = "";
-  if (!typedWord || wordsPlayedOnCard >= MAX_WORDS) return;
-
-  const firstLetter = typedWord.charAt(0);
-  const cardIndex = playerHand.findIndex(card => card.letter === firstLetter);
-
-  if (cardIndex === -1) {
-    if (errorMsg) errorMsg.innerText = `Non hai la lettera "${firstLetter}" in mano!`;
-    return;
-  }
-
-  // NESSUN CONTROLLO IA: Si accetta qualsiasi parola scritta!
-  playerHand.splice(cardIndex, 1);
-  renderHand();
-
-  lastPlayedWord = typedWord;
-  showCenterStage(firstLetter, `Parola giocata: "${typedWord}"`);
-  lastPlayerId = "TU";
-
-  registerWordPlay(typedWord, true);
-
-  if (typeof sendData === 'function' && connection && connection.open) {
-    sendData({ type: 'PLAY_WORD_REMOTE', word: typedWord, letter: firstLetter });
-  }
-}
-
-// Mostra la carta gigante al centro e il tasto Google (se in Lontani)
-function showCenterStage(letter, infoText) {
-  const stage = document.getElementById('center-stage');
-  const zoomedCard = document.getElementById('zoomed-card');
-  const infoEl = document.getElementById('last-play-info');
-  const googleBtn = document.getElementById('btn-google-check');
-
-  stage.style.display = 'block';
-  zoomedCard.innerText = letter;
-  infoEl.innerText = infoText;
-
-  if (gameMode === 'LONTANI' && lastPlayedWord) {
-    googleBtn.style.display = 'inline-block';
-    googleBtn.href = `https://www.google.com/search?q=significato+${encodeURIComponent(lastPlayedWord)}`;
-  } else {
-    googleBtn.style.display = 'none';
-  }
-}
-
-// CONTESTAZIONE: Chi ha giocato l'ultima carta prende +1 penalità
-function contestLastPlay() {
-  if (typeof sendData === 'function' && connection && connection.open) {
-    sendData({ type: 'CONTEST_PLAY' });
-  }
-
-  // Se l'ultima giocata era la tua, prendi la penalità
-  if (lastPlayerId === "TU") {
-    assignPenaltyCard("Contestazione accettata!");
-  } else {
-    const errorMsg = document.getElementById('error-msg');
-    if (errorMsg) errorMsg.innerText = "Hai contestato! L'avversario pesca +1 carta.";
-  }
-}
   const recognition = new SpeechRecognition();
   recognition.lang = 'it-IT';
   recognition.interimResults = false;
