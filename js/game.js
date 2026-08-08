@@ -197,6 +197,8 @@ function playCardLocal(cardIndex) {
   if (wordsPlayedOnCard >= MAX_WORDS) return;
 
   const card = playerHand[cardIndex];
+  if (!card) return; // Controllo di sicurezza se la carta non esiste
+
   playerHand.splice(cardIndex, 1);
   renderHand();
 
@@ -208,6 +210,10 @@ function playCardLocal(cardIndex) {
   }
 
   registerWordPlay(`[LETTERA ${card.letter}]`, true);
+  
+  // Forza l'aggiornamento visivo immediato del contatore a schermo
+  const countEl = document.getElementById('words-count');
+  if (countEl) countEl.innerText = wordsPlayedOnCard;
 }
 
 function processPlayerWord(typedWord) {
