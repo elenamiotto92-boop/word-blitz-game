@@ -1,6 +1,3 @@
-// ==========================================
-// CONFIGURAZIONE E VARIABILI GLOBALI
-// ==========================================
 const MAX_WORDS = 3;
 const MAX_LIGHTNINGS = 40;
 const HAND_SIZE = 7;
@@ -25,9 +22,6 @@ const LETTERS_POOL = [
   { letter: 'Y', lightnings: 3 }, { letter: 'Z', lightnings: 3 }
 ];
 
-// ==========================================
-// SCELTA MODALITÀ E SCHERMATA INIZIALE
-// ==========================================
 function selectGameMode(mode) {
   gameMode = mode;
   const setupBox = document.getElementById('multiplayer-setup');
@@ -80,9 +74,6 @@ function startMultiplayerGame(initialCategory) {
   nextCategoryCard();
 }
 
-// ==========================================
-// GESTIONE MANO E CATEGORIE
-// ==========================================
 function drawHand() {
   const hand = [];
   if (!currentCategory && typeof pickRandomCategory === 'function') {
@@ -160,9 +151,6 @@ function renderHand() {
   }
 }
 
-// ==========================================
-// REGISTRAZIONE PAROLE E CAMBIO CATEGORIA (A 3 PAROLE)
-// ==========================================
 function registerWordPlay(word, isPlayer = true, customName = null) {
   wordsPlayedOnCard++;
   const countEl = document.getElementById('words-count');
@@ -179,7 +167,6 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
   const playedWordsEl = document.getElementById('played-words');
   if (playedWordsEl) playedWordsEl.appendChild(chip);
 
-  // OGNI 3 PAROLE CAMBIA SOLO LA CATEGORIA (Le carte in mano restano invariate!)
   if (wordsPlayedOnCard >= MAX_WORDS) {
     if (!connection || !connection.open) {
       if (bot) bot.stopThinking();
@@ -199,9 +186,6 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
   }
 }
 
-// ==========================================
-// AZIONI DI GIOCO (VICINI E LONTANI)
-// ==========================================
 function playCardLocal(cardIndex) {
   if (wordsPlayedOnCard >= MAX_WORDS) return;
 
@@ -224,10 +208,9 @@ function playCardLocal(cardIndex) {
   const countEl = document.getElementById('words-count');
   if (countEl) countEl.innerText = wordsPlayedOnCard;
 
-  // CONTROLLO SE HAI FINITO TUTTE LE CARTE
   if (playerHand.length === 0) {
     alert("Hai svuotato la mano per primo! Fine della manche.");
-    pickRandomCategory(); // Sceglie la nuova categoria
+    pickRandomCategory();
     if (typeof sendData === 'function' && connection && connection.open) {
       sendData({ type: 'ROUND_OVER', category: currentCategory, lightnings: playerLightnings });
     }
@@ -261,13 +244,12 @@ function processPlayerWord(typedWord) {
     sendData({ type: 'PLAY_WORD_REMOTE', word: typedWord, letter: firstLetter });
   }
 
-  // CONTROLLO SE HAI FINITO TUTTE LE CARTE
   if (playerHand.length === 0) {
     if (!connection || !connection.open) {
       if (bot) bot.stopThinking();
     }
     alert("HAI SVUOTATO LA MANO! Fine della manche.");
-    pickRandomCategory(); // Sceglie la nuova categoria
+    pickRandomCategory();
     if (typeof sendData === 'function' && connection && connection.open) {
       sendData({ type: 'ROUND_OVER', category: currentCategory, lightnings: playerLightnings });
     }
@@ -365,12 +347,8 @@ function submitTypedWord() {
   processPlayerWord(typedWord);
 }
 
-// ==========================================
-// FINE MANCHE E CALCOLO FULMINI (SINCRONIZZATO)
-// ==========================================
 function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnings = null) {
   if (iClosedFirst) {
-    // Hai chiuso tu per primo -> 0 punti di penalità in questa manche per te
     if (!connection || !connection.open) {
       if (bot && bot.hand) {
         let botPenalties = 0;
@@ -379,7 +357,6 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
       }
     }
   } else {
-    // Ha chiuso l'avversario -> sommi i fulmini delle tue carte rimaste in mano
     let myPenalties = 0;
     playerHand.forEach(c => myPenalties += c.lightnings);
     playerLightnings += myPenalties;
@@ -389,13 +366,11 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
     }
   }
 
-  // Se l'avversario ha mandato i suoi fulmini aggiornati nel pacchetto, aggiornali a schermo
-  if (incomingLightnings !== null) {
+  if (incomingLightnings !== null && incomingLightnings !== undefined) {
     const botLightningsEl = document.getElementById('bot-lightnings');
     if (botLightningsEl) botLightningsEl.innerText = incomingLightnings;
   }
 
-  // Aggiorna la grafica dei tuoi fulmini
   const playerLightningsEl = document.getElementById('player-lightnings');
   if (playerLightningsEl) playerLightningsEl.innerText = playerLightnings;
   
@@ -404,27 +379,25 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
     botLightningsEl.innerText = bot.lightnings || 0;
   }
 
-  // Controllo fine partita (40 fulmini)
+  if (iClosedFirst && typeof sendData === 'function' && connection && connection.open) {
+    sendData({ type: 'UPDATE_LIGHTNINGS', lightnings: playerLightnings });
+  }
+
   if (playerLightnings >= MAX_LIGHTNINGS || (bot && bot.lightnings >= MAX_LIGHTNINGS)) {
     alert("FINE PARTITA - 40 FULMINI RAGGIUNTI!");
     location.reload();
     return;
   }
 
-  // Distribuzione di 7 CARTE NUOVE TOTALI a testa
   alert("Nuova manche! Distribuite 7 nuove carte a tutti.");
   playerHand = drawHand();
   if (!connection || !connection.open) {
     if (bot) bot.hand = drawHand();
   }
 
-  // Avvia la nuova manche con la categoria corretta
   nextCategoryCard();
 }
 
-// ==========================================
-// COMANDI VOCALI (MICROFONO)
-// ==========================================
 function startVoiceRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
