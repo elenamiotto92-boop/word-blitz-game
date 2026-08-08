@@ -1,52 +1,27 @@
-// ==========================================
-// CONFIGURAZIONE E VARIABILI GLOBALI
-// ==========================================
 const MAX_WORDS = 3;
 const MAX_LIGHTNINGS = 40;
 const HAND_SIZE = 7;
 
-let gameMode = 'VICINI'; // Default ('VICINI' o 'LONTANI')
-let lastPlayerId = null; // Per sapere a chi dare la penalità se contestato
+let gameMode = 'VICINI'; 
+let lastPlayerId = null; 
 let lastPlayedWord = "";
 
 let currentCategory = "";
 let wordsPlayedOnCard = 0;
 let playerHand = [];
 let playerLightnings = 0;
-const bot = new BotPlayer();
+const bot = typeof BotPlayer !== 'undefined' ? new BotPlayer() : null;
 
 const LETTERS_POOL = [
-  { letter: 'A', lightnings: 1 },
-  { letter: 'B', lightnings: 2 },
-  { letter: 'C', lightnings: 1 },
-  { letter: 'D', lightnings: 2 },
-  { letter: 'E', lightnings: 1 },
-  { letter: 'F', lightnings: 2 },
-  { letter: 'G', lightnings: 2 },
-  { letter: 'H', lightnings: 3 },
-  { letter: 'I', lightnings: 1 },
-  { letter: 'J', lightnings: 3 },
-  { letter: 'K', lightnings: 3 },
-  { letter: 'L', lightnings: 1 },
-  { letter: 'M', lightnings: 1 },
-  { letter: 'N', lightnings: 1 },
-  { letter: 'O', lightnings: 1 },
-  { letter: 'P', lightnings: 1 },
-  { letter: 'Q', lightnings: 3 },
-  { letter: 'R', lightnings: 1 },
-  { letter: 'S', lightnings: 1 },
-  { letter: 'T', lightnings: 1 },
-  { letter: 'U', lightnings: 2 },
-  { letter: 'V', lightnings: 2 },
-  { letter: 'W', lightnings: 3 },
-  { letter: 'X', lightnings: 3 },
-  { letter: 'Y', lightnings: 3 },
-  { letter: 'Z', lightnings: 3 }
+  { letter: 'A', lightnings: 1 }, { letter: 'B', lightnings: 2 }, { letter: 'C', lightnings: 1 }, { letter: 'D', lightnings: 2 },
+  { letter: 'E', lightnings: 1 }, { letter: 'F', lightnings: 2 }, { letter: 'G', lightnings: 2 }, { letter: 'H', lightnings: 3 },
+  { letter: 'I', lightnings: 1 }, { letter: 'J', lightnings: 3 }, { letter: 'K', lightnings: 3 }, { letter: 'L', lightnings: 1 },
+  { letter: 'M', lightnings: 1 }, { letter: 'N', lightnings: 1 }, { letter: 'O', lightnings: 1 }, { letter: 'P', lightnings: 1 },
+  { letter: 'Q', lightnings: 3 }, { letter: 'R', lightnings: 1 }, { letter: 'S', lightnings: 1 }, { letter: 'T', lightnings: 1 },
+  { letter: 'U', lightnings: 2 }, { letter: 'V', lightnings: 2 }, { letter: 'W', lightnings: 3 }, { letter: 'X', lightnings: 3 },
+  { letter: 'Y', lightnings: 3 }, { letter: 'Z', lightnings: 3 }
 ];
 
-// ==========================================
-// SCELTA MODALITÀ (MENU PRINCIPALE)
-// ==========================================
 function selectGameMode(mode) {
   gameMode = mode;
   
@@ -65,9 +40,6 @@ function selectGameMode(mode) {
   }
 }
 
-// ==========================================
-// AVVIO PARTITA
-// ==========================================
 function startGameScreen() {
   document.getElementById('home-screen').style.display = 'none';
   document.getElementById('game-container').style.display = 'flex';
@@ -86,14 +58,11 @@ function startGameScreen() {
 }
 
 function startSinglePlayer() {
-  if (typeof DICTIONARY === 'undefined') {
-    alert("Errore: dizionario non caricato!");
-    return;
-  }
+  if (typeof DICTIONARY === 'undefined') return alert("Dizionario non caricato!");
   startGameScreen();
   pickRandomCategory();
   playerHand = drawHand();
-  bot.hand = drawHand();
+  if (bot) bot.hand = drawHand();
   nextCategoryCard();
 }
 
@@ -108,9 +77,6 @@ function startMultiplayerGame(initialCategory) {
   nextCategoryCard();
 }
 
-// ==========================================
-// GESTIONE CARTE E CATEGORIE
-// ==========================================
 function drawHand() {
   const hand = [];
   
@@ -139,10 +105,8 @@ function drawHand() {
 
     const poolToUse = validPool.length > 0 ? validPool : LETTERS_POOL;
     const randomCard = poolToUse[Math.floor(Math.random() * poolToUse.length)];
-    
     hand.push({ ...randomCard, id: Math.random() });
   }
-  
   return hand;
 }
 
@@ -154,21 +118,15 @@ function nextCategoryCard() {
   const countEl = document.getElementById('words-count');
   if (countEl) countEl.innerText = wordsPlayedOnCard;
   
-  if (!currentCategory) {
-    pickRandomCategory();
-  }
+  if (!currentCategory) pickRandomCategory();
   
   const catEl = document.getElementById('current-category');
   if (catEl) catEl.innerText = currentCategory;
   
   renderHand();
 
-  if (typeof isHost !== 'undefined' && isHost && typeof sendData === 'function') {
-    sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
-  }
-
   if (!connection || !connection.open) {
-    bot.startThinking(currentCategory, handleBotPlay);
+    if (bot) bot.startThinking(currentCategory, handleBotPlay);
   }
 }
 
@@ -185,7 +143,6 @@ function renderHand() {
     if (gameMode === 'VICINI') {
       cardDiv.onclick = () => playCardLocal(index);
     }
-    
     handEl.appendChild(cardDiv);
   });
 
@@ -212,11 +169,12 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
   if (playedWordsEl) playedWordsEl.appendChild(chip);
 
   if (wordsPlayedOnCard >= MAX_WORDS) {
-    if (!connection || !connection.open) bot.stopThinking();
+    if (!connection || !connection.open) {
+      if (bot) bot.stopThinking();
+    }
     
-    // Se stiamo giocando in Multiplayer con un amico
+    // Solo l'Host calcola il cambio di categoria e lo invia (l'ospite aspetta il comando)
     if (typeof isHost !== 'undefined' && connection && connection.open) {
-      // SOLO l'Host calcola la nuova categoria e la invia (l'ospite aspetta obbediente)
       if (isHost) {
         setTimeout(() => {
           const categories = Object.keys(DICTIONARY);
@@ -226,7 +184,6 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
         }, 1200);
       }
     } else {
-      // Se stiamo giocando da soli contro l'IA
       setTimeout(() => {
         const categories = Object.keys(DICTIONARY);
         currentCategory = categories[Math.floor(Math.random() * categories.length)];
@@ -234,9 +191,8 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
       }, 1200);
     }
   }
-// ==========================================
-// MODALITÀ "SIAMO VICINI" E "SIAMO LONTANI"
-// ==========================================
+}
+
 function playCardLocal(cardIndex) {
   if (wordsPlayedOnCard >= MAX_WORDS) return;
 
@@ -267,7 +223,6 @@ function processPlayerWord(typedWord) {
     return;
   }
 
-  // Nessun controllo IA in modalità amici: si accetta qualsiasi parola scritta!
   playerHand.splice(cardIndex, 1);
   renderHand();
 
@@ -282,7 +237,9 @@ function processPlayerWord(typedWord) {
   }
 
   if (playerHand.length === 0) {
-    if (!connection || !connection.open) bot.stopThinking();
+    if (!connection || !connection.open) {
+      if (bot) bot.stopThinking();
+    }
     setTimeout(() => {
       alert("HAI SVUOTATO LA MANO! Fine della manche.");
       endRoundAndCountLightnings();
@@ -329,11 +286,11 @@ function changeCategoryWithPenalty() {
   renderHand();
 
   if (!connection || !connection.open) {
-    if (typeof bot !== 'undefined' && bot.hand) {
+    if (bot && bot.hand) {
       const penaltyCardBot = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
       bot.hand.push({ ...penaltyCardBot, id: Math.random() });
+      bot.stopThinking();
     }
-    bot.stopThinking();
   } else if (typeof sendData === 'function') {
     sendData({ type: 'PENALTY_CARD_BOTH' });
   }
@@ -351,9 +308,6 @@ function changeCategoryWithPenalty() {
   nextCategoryCard();
 }
 
-// ==========================================
-// BOT, PENALITÀ E FINE TURNI
-// ==========================================
 function handleBotPlay(card, word) {
   if (wordsPlayedOnCard >= MAX_WORDS) return;
   bot.hand = bot.hand.filter(c => c.id !== card.id);
@@ -387,7 +341,7 @@ function submitTypedWord() {
 
 function endRoundAndCountLightnings() {
   playerHand.forEach(c => playerLightnings += c.lightnings);
-  if (typeof bot !== 'undefined' && bot.hand) {
+  if (bot && bot.hand) {
     bot.hand.forEach(c => bot.lightnings += c.lightnings);
   }
 
@@ -399,19 +353,18 @@ function endRoundAndCountLightnings() {
     botLightningsEl.innerText = bot.lightnings;
   }
 
-  if (playerLightnings >= MAX_LIGHTNINGS || (bot.lightnings && bot.lightnings >= MAX_LIGHTNINGS)) {
+  if (playerLightnings >= MAX_LIGHTNINGS || (bot && bot.lightnings >= MAX_LIGHTNINGS)) {
     alert("FINE PARTITA - 40 FULMINI RAGGIUNTI!");
     location.reload();
   } else {
     playerHand = drawHand();
-    if (!connection || !connection.open) bot.hand = drawHand();
+    if (!connection || !connection.open) {
+      if (bot) bot.hand = drawHand();
+    }
     nextCategoryCard();
   }
 }
 
-// ==========================================
-// COMANDI VOCALI (MICROFONO)
-// ==========================================
 function startVoiceRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
@@ -419,11 +372,6 @@ function startVoiceRecognition() {
     return;
   }
 
-  function pickRandomCategory() {
-  if (typeof DICTIONARY === 'undefined') return;
-  const categories = Object.keys(DICTIONARY);
-  currentCategory = categories[Math.floor(Math.random() * categories.length)];
-}
   const recognition = new SpeechRecognition();
   recognition.lang = 'it-IT';
   recognition.interimResults = false;
@@ -453,4 +401,10 @@ function startVoiceRecognition() {
     recognition.stop();
     if (micButton) micButton.style.background = '#e74c3c';
   };
+}
+
+function pickRandomCategory() {
+  if (typeof DICTIONARY === 'undefined') return;
+  const categories = Object.keys(DICTIONARY);
+  currentCategory = categories[Math.floor(Math.random() * categories.length)];
 }
