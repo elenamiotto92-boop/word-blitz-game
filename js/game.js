@@ -32,7 +32,8 @@ function selectGameMode(mode) {
     if (mode === 'VICINI') {
       labelEl.innerText = "📍 Modalità: SIAMO VICINI (Tocca la carta e parla)";
     } else {
-      labelEl.innerText = "🌍 Modalità: SIAMO LONTANI (Scrivi e verifica)";
+      // 👉 Qui c'è l'Opzione 1 inserita perfettamente
+      labelEl.innerText = "🌍 Modalità Lontani: Nessun correttore o T9 attivo. Scrivi liberamente la tua parola: verrà accettata dal sistema, ma attenzione! Il tuo avversario potrà verificarla con il tasto Google e contestarla se è errata o fuori tema, facendoti pescare una carta di penalità.";
     }
   }
 }
