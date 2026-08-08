@@ -379,7 +379,7 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
     botLightningsEl.innerText = bot.lightnings || 0;
   }
 
-  if (iClosedFirst && typeof sendData === 'function' && connection && connection.open) {
+ if (typeof sendData === 'function' && connection && connection.open) {
     sendData({ type: 'UPDATE_LIGHTNINGS', lightnings: playerLightnings });
   }
 
