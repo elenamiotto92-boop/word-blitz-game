@@ -4,44 +4,45 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Word Blitz - GitHub Edition</title>
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
 
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
- <!-- MENU PRINCIPALE -->
-  <div id="home-screen" style="position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; padding: 20px 15px; width: 100%; max-width: 500px; margin: 0 auto; background-color: #e8e2d5; border-radius: 12px;">
-    <h1 style="color: #9a3412; font-size: 1.6rem; margin-bottom: 8px; text-align: center;">⚡ WORD BLITZ ⚡</h1>
+  <!-- MENU PRINCIPALE -->
+  <div id="home-screen">
+    <h1>⚡ WORD BLITZ ⚡</h1>
     
-    <div style="background: #f7f4ed; padding: 12px 14px; border: 1px solid #dcd4c5; border-radius: 8px; margin-bottom: 12px; text-align: left; font-size: 0.85rem; line-height: 1.4; width: 100%; box-sizing: border-box; color: #443833;">
-      <h3 style="color: #78350f; margin-bottom: 6px; text-align: center; font-size: 0.95rem;">📖 Regole del Gioco</h3>
-      <p style="margin: 4px 0;">• 7 carte lettera in mano.</p>
-      <p style="margin: 4px 0;">• Scarta una lettera dicendo o scrivendo una parola.</p>
-      <p style="margin: 4px 0;">• Max 3 parole per categoria, poi si cambia.</p>
-      <p style="margin: 4px 0;">• Contesta le parole dubbie: chi sbaglia prende +1 carta!</p>
-      <p style="margin: 4px 0;">• Chi arriva a <strong>40 fulmini</strong> perde!</p>
+    <div class="rules-box">
+      <h3>📖 Regole del Gioco</h3>
+      <p>• 7 carte lettera in mano.</p>
+      <p>• Scarta una lettera dicendo o scrivendo una parola.</p>
+      <p>• Max 3 parole per categoria, poi si cambia.</p>
+      <p>• Contesta le parole dubbie: chi sbaglia prende +1 carta!</p>
+      <p>• Chi arriva a <strong>40 fulmini</strong> perde!</p>
     </div>
 
-    <h3 style="margin-bottom: 8px; font-size: 0.9rem; text-align: center; color: #78350f;">Scegli la modalità Amici:</h3>
+    <h3>Scegli la modalità Amici:</h3>
     
     <!-- SCELTA MODALITÀ: VICINI O LONTANI -->
-    <div style="display: flex; gap: 8px; justify-content: center; width: 100%; position: relative; z-index: 20;">
-      <button onclick="selectGameMode('VICINI')" style="background: #3f6212; color: white; border: none; padding: 12px 8px; border-radius: 8px; font-weight: bold; font-size: 0.85rem; cursor: pointer; line-height: 1.3; flex: 1; pointer-events: auto !important;">📍 Siamo Vicini<br>(A voce)</button>
-      <button onclick="selectGameMode('LONTANI')" style="background: #334155; color: white; border: none; padding: 12px 8px; border-radius: 8px; font-weight: bold; font-size: 0.85rem; cursor: pointer; line-height: 1.3; flex: 1; pointer-events: auto !important;">🌍 Siamo Lontani<br>(Testo)</button>
+    <div class="mode-buttons">
+      <button onclick="selectGameMode('VICINI')" class="btn-vicini">📍 Siamo Vicini<br>(A voce)</button>
+      <button onclick="selectGameMode('LONTANI')" class="btn-lontani">🌍 Siamo Lontani<br>(Testo)</button>
     </div>
 
     <!-- SETUP MULTIPLAYER -->
-    <div id="multiplayer-setup" style="display: none; margin-top: 12px; padding-top: 8px; border-top: 1px solid #dcd4c5; width: 100%; text-align: center; position: relative; z-index: 20;">
-      <p id="selected-mode-label" style="color: #9a3412; font-size: 0.8rem; margin-bottom: 8px; font-weight: bold; line-height: 1.4;"></p>
-      <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; align-items: center;">
-        <button onclick="createRoom()" style="background: #9a3412; color: white; border: none; padding: 10px 12px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; cursor: pointer; pointer-events: auto !important;">Crea Stanza</button>
-        <input type="text" id="room-code-input" placeholder="Codice..." style="padding: 10px; width: 90px; text-align: center; border-radius: 6px; border: 1px solid #dcd4c5; font-size: 0.85rem; background: #fff; color: #2c221e;">
-        <button onclick="joinRoom()" style="background: #581c87; color: white; border: none; padding: 10px 12px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; cursor: pointer; pointer-events: auto !important;">Unisciti</button>
+    <div id="multiplayer-setup" style="display: none;">
+      <p id="selected-mode-label"></p>
+      <div class="setup-controls">
+        <button onclick="createRoom()" class="btn-create">Crea Stanza</button>
+        <input type="text" id="room-code-input" placeholder="Codice..." autocomplete="off">
+        <button onclick="joinRoom()" class="btn-join">Unisciti</button>
       </div>
-      <div id="connection-status" style="margin-top: 12px; padding: 8px; background: #f7f4ed; border-radius: 6px; color: #78350f; font-size: 0.85rem; font-weight: bold; text-align: center; width: 100%; box-sizing: border-box; border: 1px solid #dcd4c5;"></div>
+      <div id="connection-status"></div>
     </div>
   </div>
+
   <!-- TAVOLO DI GIOCO -->
   <div id="game-container" style="display: none;">
     <header>
@@ -52,7 +53,7 @@
       </div>
     </header>
 
-    <main style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+    <main>
       <section class="board">
         <div class="question-card">
           <span class="label">CATEGORIA ATTIVA</span>
@@ -63,13 +64,13 @@
       </section>
 
       <!-- CARTA INGRANDITA AL CENTRO E TASTI CONTESTA / GOOGLE -->
-      <div id="center-stage" style="display: none; margin: 10px 0; text-align: center; width: 100%;">
+      <div id="center-stage" style="display: none;">
         <div id="zoomed-card" class="zoomed-card">?</div>
-        <p id="last-play-info" style="font-size: 0.85rem; color: #f1c40f; margin-top: 6px; font-weight: bold;"></p>
+        <p id="last-play-info"></p>
         
-        <div style="display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap;">
-          <button onclick="contestLastPlay()" style="background: #c0392b; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; cursor: pointer;">⚠️ CONTESTA</button>
-          <a id="btn-google-check" href="#" target="_blank" style="display: none; background: #34495e; color: white; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; font-size: 0.85rem;">🔍 Verifica su Google</a>
+        <div class="center-actions">
+          <button onclick="contestLastPlay()" class="btn-contest">⚠️ CONTESTA</button>
+          <a id="btn-google-check" href="#" target="_blank" style="display: none;" class="btn-google">🔍 Verifica su Google</a>
         </div>
       </div>
 
@@ -87,9 +88,9 @@
             spellcheck="false"
           >
           <div class="action-buttons">
-            <button onclick="submitTypedWord()" style="background: #27ae60; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer;">INVIA</button>
-            <button id="btn-mic" onclick="startVoiceRecognition()" style="background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 8px; font-size: 1.2rem; cursor: pointer;" title="Voce">🎙️</button>
-            <button onclick="changeCategoryWithPenalty()" style="background: #e67e22; color: white; border: none; padding: 8px; border-radius: 8px; font-weight: bold; font-size: 0.8rem; cursor: pointer; margin-top: 2px;">🔄 CAMBIA CATEGORIA (+1 CARTA)</button>
+            <button onclick="submitTypedWord()" class="btn-send">INVIA</button>
+            <button id="btn-mic" onclick="startVoiceRecognition()" class="btn-mic" title="Voce">🎙️</button>
+            <button onclick="changeCategoryWithPenalty()" class="btn-change-cat">🔄 CAMBIA CATEGORIA (+1 CARTA)</button>
           </div>
           <div id="error-msg" class="error-msg"></div>
         </div>
@@ -97,9 +98,9 @@
     </main>
   </div>
         
- <script src="js/dictionary.js"></script>
+  <script src="js/dictionary.js"></script>
   <script src="js/bot.js"></script>
-  <script src="js/game.js"></script>   <!-- ✅ Prima la logica del gioco -->
-  <script src="js/network.js"></script> <!-- ✅ Poi la rete -->
+  <script src="js/game.js"></script>
+  <script src="js/network.js"></script>
 </body>
 </html>
