@@ -411,6 +411,11 @@ function startVoiceRecognition() {
     return;
   }
 
+  function pickRandomCategory() {
+  if (typeof DICTIONARY === 'undefined') return;
+  const categories = Object.keys(DICTIONARY);
+  currentCategory = categories[Math.floor(Math.random() * categories.length)];
+}
   const recognition = new SpeechRecognition();
   recognition.lang = 'it-IT';
   recognition.interimResults = false;
