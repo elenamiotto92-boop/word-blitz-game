@@ -411,3 +411,27 @@ function pickRandomCategory() {
   const categories = Object.keys(DICTIONARY);
   currentCategory = categories[Math.floor(Math.random() * categories.length)];
 }
+
+function nextCategoryCard() {
+  wordsPlayedOnCard = 0;
+  const playedEl = document.getElementById('played-words');
+  if (playedEl) playedEl.innerHTML = "";
+  
+  const countEl = document.getElementById('words-count');
+  if (countEl) countEl.innerText = wordsPlayedOnCard;
+  
+  // 👉 NASCONDI LA CARTA CENTRALE QUANDO CAMBIA CATEGORIA
+  const centerStage = document.getElementById('center-stage');
+  if (centerStage) centerStage.style.display = 'none';
+  
+  if (!currentCategory) pickRandomCategory();
+  
+  const catEl = document.getElementById('current-category');
+  if (catEl) catEl.innerText = currentCategory;
+  
+  renderHand();
+
+  if (!connection || !connection.open) {
+    if (bot) bot.startThinking(currentCategory, handleBotPlay);
+  }
+}
