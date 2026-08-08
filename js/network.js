@@ -64,12 +64,10 @@ function joinRoom() {
 }
 
 function setupDataListener() {
-  // Se è già in ascolto, non si sdoppia!
   if (!connection || dataListenerAttached) return;
   dataListenerAttached = true;
 
   connection.on('data', (data) => {
-    // 1. Avvio partita multiplayer
     if (data.type === 'START_MULTIPLAYER') {
       if (data.mode) {
         gameMode = data.mode;
@@ -77,14 +75,12 @@ function setupDataListener() {
       startMultiplayerGame(data.category);
     }
 
-    // 2. Modalità Vicini (Giocata lettera a voce)
     if (data.type === 'PLAY_CARD_STAGE') {
       showCenterStage(data.letter, "L'avversario ha giocato questa lettera (ha parlato a voce)");
       lastPlayerId = "AVVERSARIO";
       registerWordPlay(`[LETTERA ${data.letter}]`, false, "AMICO");
     }
 
-    // 3. Modalità Lontani (Parola scritta)
     if (data.type === 'PLAY_WORD_REMOTE') {
       lastPlayedWord = data.word;
       showCenterStage(data.letter, `L'avversario ha scritto: "${data.word}"`);
@@ -92,14 +88,12 @@ function setupDataListener() {
       registerWordPlay(data.word, false, "AMICO");
     }
 
-    // 4. Contestazioni
     if (data.type === 'CONTEST_PLAY') {
       if (lastPlayerId === "TU") {
         assignPenaltyCard("L'avversario ha contestato la tua parola!");
       }
     }
 
-    // 5. Penalità cambio categoria
     if (data.type === 'PENALTY_CARD_BOTH') {
       const penaltyCard = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
       playerHand.push({ ...penaltyCard, id: Math.random() });
@@ -108,7 +102,6 @@ function setupDataListener() {
       if (errorMsg) errorMsg.innerText = "L'avversario ha cambiato categoria! +1 carta a testa.";
     }
 
-    // 6. Cambio categoria ogni 3 parole (mantenendo le stesse carte in mano)
     if (data.type === 'CHANGE_CATEGORY_ONLY') {
       currentCategory = data.category;
       wordsPlayedOnCard = 0;
@@ -122,16 +115,15 @@ function setupDataListener() {
       const stage = document.getElementById('center-stage');
       if (stage) stage.style.display = 'none';
       
-      renderHand(); // Aggiorna la visualizzazione tenendo le stesse carte
+      renderHand();
     }
 
-    // 7. L'avversario ha finito le carte per primo (Fine Manche sincronizzata)
+    // L'avversario ha chiuso la mano per primo
     if (data.type === 'ROUND_OVER') {
       alert("L'avversario ha svuotato la mano per primo! Conteggio fulmini.");
-      triggerRoundEnd(false, data.category); // Passa la categoria sincronizzata dell'avversario
+      triggerRoundEnd(false, data.category, data.lightnings);
     }
 
-    // 8. Vecchio comando di cambio categoria completo (mantenuto per compatibilità)
     if (data.type === 'CHANGE_CATEGORY') {
       currentCategory = data.category;
       wordsPlayedOnCard = 0;
@@ -149,7 +141,6 @@ function setupDataListener() {
       renderHand();
     }
 
-    // 9. Aggiorna i fulmini dell'avversario a schermo
     if (data.type === 'UPDATE_LIGHTNINGS') {
       const botLightningsEl = document.getElementById('bot-lightnings');
       if (botLightningsEl) {
