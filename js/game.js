@@ -383,13 +383,17 @@ function triggerRoundEnd(iClosedFirst) {
     playerLightnings += myPenalties;
   }
 
-  // Aggiorna la grafica dei fulmini
+// Aggiorna la grafica dei fulmini
   const playerLightningsEl = document.getElementById('player-lightnings');
   if (playerLightningsEl) playerLightningsEl.innerText = playerLightnings;
   
   const botLightningsEl = document.getElementById('bot-lightnings');
   if (botLightningsEl) botLightningsEl.innerText = bot.lightnings || 0;
 
+  // ⚡ INVIA I TUOI FULMINI AGGIORNATI ALL'AVVERSARIO VIA RETE
+  if (typeof sendData === 'function' && connection && connection.open) {
+    sendData({ type: 'UPDATE_LIGHTNINGS', lightnings: playerLightnings });
+  }
   // Controllo fine partita (40 fulmini)
   if (playerLightnings >= MAX_LIGHTNINGS || (bot && bot.lightnings >= MAX_LIGHTNINGS)) {
     alert("FINE PARTITA - 40 FULMINI RAGGIUNTI!");
