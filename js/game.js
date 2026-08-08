@@ -171,11 +171,15 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
   if (wordsPlayedOnCard >= MAX_WORDS) {
     if (!connection || !connection.open) {
       if (bot) bot.stopThinking();
-    }
-    
-    // Solo l'Host calcola il cambio di categoria e lo invia (l'ospite aspetta il comando)
-    if (typeof isHost !== 'undefined' && connection && connection.open) {
-      if (isHost) {
+      // MODALITÀ SINGOLA (Contro IA): Cambia categoria localmente
+      setTimeout(() => {
+        const categories = Object.keys(DICTIONARY);
+        currentCategory = categories[Math.floor(Math.random() * categories.length)];
+        nextCategoryCard();
+      }, 1200);
+    } else {
+      // MODALITÀ MULTIPLAYER: SOLO L'HOST comanda e cambia la categoria per entrambi!
+      if (typeof isHost !== 'undefined' && isHost) {
         setTimeout(() => {
           const categories = Object.keys(DICTIONARY);
           currentCategory = categories[Math.floor(Math.random() * categories.length)];
@@ -183,15 +187,9 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
           nextCategoryCard();
         }, 1200);
       }
-    } else {
-      setTimeout(() => {
-        const categories = Object.keys(DICTIONARY);
-        currentCategory = categories[Math.floor(Math.random() * categories.length)];
-        nextCategoryCard();
-      }, 1200);
+      // Se siamo l'ospite, non facciamo nulla qui: aspettiamo semplicemente che arrivi il comando dall'Host via rete!
     }
   }
-}
 
 function playCardLocal(cardIndex) {
   if (wordsPlayedOnCard >= MAX_WORDS) return;
