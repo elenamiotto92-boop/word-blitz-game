@@ -418,11 +418,11 @@ function startVoiceRecognition() {
 
   recognition.start();
 
-  recognition.onresult = (event) => {
+ recognition.onresult = (event) => {
     const spokenWord = event.results[0][0].transcript.trim().toUpperCase();
     if (micButton) micButton.style.background = '#e74c3c';
     if (errorMsg) errorMsg.innerText = "";
-    processPlayerWord(spokenWord.split(" ")[0]);
+    processPlayerWord(spokenWord); // 👉 Passa tutta la frase completa!
   };
 
   recognition.onerror = () => {
