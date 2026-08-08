@@ -9,7 +9,7 @@ function showMultiplayerSetup() {
 
 function createRoom() {
   isHost = true;
-  const shortId = "blitz-" + Math.floor(1000 + Math.random() * 9000);
+  const shortId = "room-" + Math.floor(1000 + Math.random() * 9000);
   
   peer = new Peer(shortId);
 
