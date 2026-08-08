@@ -10,7 +10,7 @@
 }
 
 html, body {
-  height: 100vh;
+  min-height: 100vh;
   width: 100vw;
   background-color: #f4f0ea !important; /* Sfondo caldo sabbia/beige */
   color: #2c221e !important;            /* Testo marrone scuro elegante */
@@ -18,10 +18,23 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  overflow: hidden;
+  overflow-y: auto; /* 👈 Permette lo scorrimento verticale e riattiva tutti i tasti */
   padding: 8px 12px;
 }
 
+/* Assicuriamoci che i pulsanti siano sempre ben cliccabili e visibili */
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  padding: 10px;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+button:active {
+  transform: scale(0.98);
+}
 #home-screen {
   width: 100%;
   max-width: 500px;
