@@ -1,3 +1,6 @@
+// ==========================================
+// CONFIGURAZIONE E VARIABILI GLOBALI
+// ==========================================
 const MAX_WORDS = 3;
 const MAX_LIGHTNINGS = 40;
 const HAND_SIZE = 7;
@@ -22,13 +25,13 @@ const LETTERS_POOL = [
   { letter: 'Y', lightnings: 3 }, { letter: 'Z', lightnings: 3 }
 ];
 
+// ==========================================
+// SCELTA MODALITÀ E SCHERMATA INIZIALE
+// ==========================================
 function selectGameMode(mode) {
   gameMode = mode;
-  
   const setupBox = document.getElementById('multiplayer-setup');
-  if (setupBox) {
-    setupBox.style.display = 'block';
-  }
+  if (setupBox) setupBox.style.display = 'block';
 
   const labelEl = document.getElementById('selected-mode-label');
   if (labelEl) {
@@ -77,9 +80,11 @@ function startMultiplayerGame(initialCategory) {
   nextCategoryCard();
 }
 
+// ==========================================
+// GESTIONE MANO E CATEGORIE
+// ==========================================
 function drawHand() {
   const hand = [];
-  
   if (!currentCategory && typeof pickRandomCategory === 'function') {
     pickRandomCategory();
   }
@@ -118,6 +123,9 @@ function nextCategoryCard() {
   const countEl = document.getElementById('words-count');
   if (countEl) countEl.innerText = wordsPlayedOnCard;
   
+  const centerStage = document.getElementById('center-stage');
+  if (centerStage) centerStage.style.display = 'none';
+  
   if (!currentCategory) pickRandomCategory();
   
   const catEl = document.getElementById('current-category');
@@ -152,6 +160,9 @@ function renderHand() {
   }
 }
 
+// ==========================================
+// REGISTRAZIONE PAROLE E CAMBIO CATEGORIA (A 3 PAROLE)
+// ==========================================
 function registerWordPlay(word, isPlayer = true, customName = null) {
   wordsPlayedOnCard++;
   const countEl = document.getElementById('words-count');
@@ -168,33 +179,34 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
   const playedWordsEl = document.getElementById('played-words');
   if (playedWordsEl) playedWordsEl.appendChild(chip);
 
+  // OGNI 3 PAROLE CAMBIA SOLO LA CATEGORIA (Le carte in mano restano invariate!)
   if (wordsPlayedOnCard >= MAX_WORDS) {
     if (!connection || !connection.open) {
       if (bot) bot.stopThinking();
       setTimeout(() => {
-        const categories = Object.keys(DICTIONARY);
-        currentCategory = categories[Math.floor(Math.random() * categories.length)];
+        pickRandomCategory();
         nextCategoryCard();
       }, 1200);
     } else {
-      // MULTIPLAYER: Chiunque faccia la mossa LOCALE che chiude la 3ª parola sceglie la categoria e la invia!
       if (isPlayer) {
         setTimeout(() => {
-          const categories = Object.keys(DICTIONARY);
-          currentCategory = categories[Math.floor(Math.random() * categories.length)];
-          sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
+          pickRandomCategory();
+          sendData({ type: 'CHANGE_CATEGORY_ONLY', category: currentCategory });
           nextCategoryCard();
         }, 1200);
       }
-      // Se l'ha messa l'avversario (isPlayer = false), il telefono sta zitto e aspetta il comando dell'altro.
     }
   }
 }
+
+// ==========================================
+// AZIONI DI GIOCO (VICINI E LONTANI)
+// ==========================================
 function playCardLocal(cardIndex) {
   if (wordsPlayedOnCard >= MAX_WORDS) return;
 
   const card = playerHand[cardIndex];
-  if (!card) return; // Controllo di sicurezza se la carta non esiste
+  if (!card) return;
 
   playerHand.splice(cardIndex, 1);
   renderHand();
@@ -208,9 +220,17 @@ function playCardLocal(cardIndex) {
 
   registerWordPlay(`[LETTERA ${card.letter}]`, true);
   
-  // Forza l'aggiornamento visivo immediato del contatore a schermo
   const countEl = document.getElementById('words-count');
   if (countEl) countEl.innerText = wordsPlayedOnCard;
+
+  // CONTROLLO SE HAI FINITO TUTTE LE CARTE
+  if (playerHand.length === 0) {
+    alert("Hai svuotato la mano per primo! Fine della manche.");
+    if (typeof sendData === 'function' && connection && connection.open) {
+      sendData({ type: 'ROUND_OVER' });
+    }
+    triggerRoundEnd(true);
+  }
 }
 
 function processPlayerWord(typedWord) {
@@ -239,14 +259,16 @@ function processPlayerWord(typedWord) {
     sendData({ type: 'PLAY_WORD_REMOTE', word: typedWord, letter: firstLetter });
   }
 
+  // CONTROLLO SE HAI FINITO TUTTE LE CARTE
   if (playerHand.length === 0) {
     if (!connection || !connection.open) {
       if (bot) bot.stopThinking();
     }
-    setTimeout(() => {
-      alert("HAI SVUOTATO LA MANO! Fine della manche.");
-      endRoundAndCountLightnings();
-    }, 500);
+    alert("HAI SVUOTATO LA MANO! Fine della manche.");
+    if (typeof sendData === 'function' && connection && connection.open) {
+      sendData({ type: 'ROUND_OVER' });
+    }
+    triggerRoundEnd(true);
   }
 }
 
@@ -301,11 +323,9 @@ function changeCategoryWithPenalty() {
   const errorMsg = document.getElementById('error-msg');
   if (errorMsg) errorMsg.innerText = "Categoria cambiata! +1 carta a testa.";
 
-  const categories = Object.keys(DICTIONARY);
-  currentCategory = categories[Math.floor(Math.random() * categories.length)];
-
+  pickRandomCategory();
   if (typeof isHost !== 'undefined' && isHost && connection && connection.open) {
-    sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
+    sendData({ type: 'CHANGE_CATEGORY_ONLY', category: currentCategory });
   }
 
   nextCategoryCard();
@@ -320,7 +340,7 @@ function handleBotPlay(card, word) {
     bot.stopThinking();
     setTimeout(() => {
       alert("Il Bot ha svuotato la mano! Fine della manche.");
-      endRoundAndCountLightnings();
+      triggerRoundEnd(false); // Il bot ha chiuso, tu prendi i fulmini
     }, 500);
   }
 }
@@ -342,32 +362,56 @@ function submitTypedWord() {
   processPlayerWord(typedWord);
 }
 
-function endRoundAndCountLightnings() {
-  playerHand.forEach(c => playerLightnings += c.lightnings);
-  if (bot && bot.hand) {
-    bot.hand.forEach(c => bot.lightnings += c.lightnings);
+// ==========================================
+// FINE MANCHE E CALCOLO FULMINI
+// ==========================================
+function triggerRoundEnd(iClosedFirst) {
+  if (iClosedFirst) {
+    // Tu hai chiuso per primo -> 0 fulmini per te.
+    // Se siamo in singolo contro il bot, calcoliamo i fulmini del bot:
+    if (!connection || !connection.open) {
+      if (bot && bot.hand) {
+        let botPenalties = 0;
+        bot.hand.forEach(c => botPenalties += c.lightnings);
+        bot.lightnings += botPenalties;
+      }
+    }
+  } else {
+    // L'avversario ha chiuso per primo -> tu prendi i fulmini delle tue carte rimanenti in mano
+    let myPenalties = 0;
+    playerHand.forEach(c => myPenalties += c.lightnings);
+    playerLightnings += myPenalties;
   }
 
+  // Aggiorna la grafica dei fulmini
   const playerLightningsEl = document.getElementById('player-lightnings');
   if (playerLightningsEl) playerLightningsEl.innerText = playerLightnings;
   
   const botLightningsEl = document.getElementById('bot-lightnings');
-  if (botLightningsEl && bot.lightnings) {
-    botLightningsEl.innerText = bot.lightnings;
-  }
+  if (botLightningsEl) botLightningsEl.innerText = bot.lightnings || 0;
 
+  // Controllo fine partita (40 fulmini)
   if (playerLightnings >= MAX_LIGHTNINGS || (bot && bot.lightnings >= MAX_LIGHTNINGS)) {
     alert("FINE PARTITA - 40 FULMINI RAGGIUNTI!");
     location.reload();
-  } else {
-    playerHand = drawHand();
-    if (!connection || !connection.open) {
-      if (bot) bot.hand = drawHand();
-    }
-    nextCategoryCard();
+    return;
   }
+
+  // Distribuzione di 7 CARTE NUOVE TOTALI a testa
+  alert("Nuova manche! Distribuite 7 nuove carte a tutti.");
+  playerHand = drawHand();
+  if (!connection || !connection.open) {
+    if (bot) bot.hand = drawHand();
+  }
+
+  // Cambio categoria per la nuova manche
+  pickRandomCategory();
+  nextCategoryCard();
 }
 
+// ==========================================
+// COMANDI VOCALI (MICROFONO)
+// ==========================================
 function startVoiceRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
@@ -410,28 +454,4 @@ function pickRandomCategory() {
   if (typeof DICTIONARY === 'undefined') return;
   const categories = Object.keys(DICTIONARY);
   currentCategory = categories[Math.floor(Math.random() * categories.length)];
-}
-
-function nextCategoryCard() {
-  wordsPlayedOnCard = 0;
-  const playedEl = document.getElementById('played-words');
-  if (playedEl) playedEl.innerHTML = "";
-  
-  const countEl = document.getElementById('words-count');
-  if (countEl) countEl.innerText = wordsPlayedOnCard;
-  
-  // 👉 NASCONDI LA CARTA CENTRALE QUANDO CAMBIA CATEGORIA
-  const centerStage = document.getElementById('center-stage');
-  if (centerStage) centerStage.style.display = 'none';
-  
-  if (!currentCategory) pickRandomCategory();
-  
-  const catEl = document.getElementById('current-category');
-  if (catEl) catEl.innerText = currentCategory;
-  
-  renderHand();
-
-  if (!connection || !connection.open) {
-    if (bot) bot.startThinking(currentCategory, handleBotPlay);
-  }
 }
