@@ -7,26 +7,20 @@
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  -webkit-tap-highlight-color: transparent; /* Rimuove il fastidioso alone grigio su mobile al tocco */
+  -webkit-tap-highlight-color: transparent;
 }
 
-html {
-  background-color: #f4f0ea !important;
+html, body {
   width: 100%;
-  height: 100%;
-}
-
-body {
   min-height: 100vh;
-  width: 100%;
   background-color: #f4f0ea !important;
   color: #2c221e !important;
-  display: block; /* 👈 Fondamentale per evitare blocchi al tocco su iOS */
-  overflow-y: auto;
+  overflow-y: auto !important; /* Sblocca lo scroll e i tocchi su mobile */
+  display: block !important;
   padding: 12px;
-  margin: 0;
 }
 
+/* MENU PRINCIPALE */
 #home-screen {
   width: 100%;
   max-width: 500px;
@@ -34,69 +28,161 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   padding: 20px 15px;
-  background-color: #e8e2d5 !important;
+  background-color: #e8e2d5;
   border-radius: 12px;
-}
-
-/* Assicura che qualsiasi bottone sia sempre reattivo al tocco */
-button {
-  cursor: pointer;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  padding: 12px;
-  touch-action: manipulation; /* Migliora la risposta al tap su smartphone */
+  box-shadow: 0 4px 15px rgba(44, 34, 30, 0.08);
 }
 
 #home-screen h1 {
-  color: #9a3412 !important; /* Terracotta caldo */
-  font-size: 1.7rem;
-  margin-bottom: 4px;
+  color: #9a3412;
+  font-size: 1.6rem;
+  text-align: center;
 }
 
-/* Box delle regole nella home */
-#home-screen > div:nth-of-type(1) {
-  width: 100% !important;
-  max-width: 100% !important;
-  padding: 18px 20px !important;
-  font-size: 1rem !important;
-  line-height: 1.6 !important;
-  background: #f7f4ed !important;
-  border: 1px solid #dcd4c5 !important;
-  border-radius: 10px;
-  color: #443833 !important;
+.rules-box {
+  background: #f7f4ed;
+  padding: 12px 14px;
+  border: 1px solid #dcd4c5;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  width: 100%;
+  color: #443833;
 }
 
-#home-screen > div:nth-of-type(1) h3 {
-  font-size: 1.15rem !important;
-  margin-bottom: 10px !important;
-  color: #78350f !important;
+.rules-box h3 {
+  color: #78350f;
+  margin-bottom: 6px;
+  text-align: center;
+  font-size: 0.95rem;
 }
 
-#home-screen > div:nth-of-type(1) p {
-  font-size: 0.95rem !important;
-  margin-bottom: 6px !important;
+.rules-box p {
+  margin: 4px 0;
 }
 
 #home-screen h3 {
-  font-size: 1.05rem;
-  margin-top: 4px;
-  margin-bottom: 4px;
+  font-size: 0.9rem;
+  text-align: center;
   color: #78350f;
 }
 
+/* BOTTONI SELEZIONE MODALITÀ */
+.mode-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+}
+
+.btn-vicini {
+  background: #3f6212 !important;
+  color: white;
+  border: none;
+  padding: 12px 8px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  cursor: pointer;
+  line-height: 1.3;
+  flex: 1;
+}
+
+.btn-lontani {
+  background: #334155 !important;
+  color: white;
+  border: none;
+  padding: 12px 8px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  cursor: pointer;
+  line-height: 1.3;
+  flex: 1;
+}
+
+/* SETUP MULTIPLAYER */
+#multiplayer-setup {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #dcd4c5;
+  width: 100%;
+  text-align: center;
+}
+
+#selected-mode-label {
+  color: #9a3412;
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+  font-weight: bold;
+  line-height: 1.4;
+}
+
+.setup-controls {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btn-create {
+  background: #9a3412 !important;
+  color: white;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+#room-code-input {
+  padding: 10px;
+  width: 90px;
+  text-align: center;
+  border-radius: 6px;
+  border: 1px solid #dcd4c5;
+  font-size: 0.85rem;
+  background: #fff;
+  color: #2c221e;
+}
+
+.btn-join {
+  background: #581c87 !important;
+  color: white;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+#connection-status {
+  margin-top: 12px;
+  padding: 8px;
+  background: #f7f4ed;
+  border-radius: 6px;
+  color: #78350f;
+  font-size: 0.85rem;
+  font-weight: bold;
+  text-align: center;
+  width: 100%;
+  border: 1px solid #dcd4c5;
+}
+
+/* TAVOLO DI GIOCO */
 #game-container {
   width: 100%;
   max-width: 500px;
-  height: 100%;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   gap: 14px;
-  padding: 10px;
 }
 
 header {
@@ -110,7 +196,7 @@ header {
   text-align: center;
 }
 
-h1 {
+header h1 {
   color: #9a3412;
   font-size: 1.4rem;
 }
@@ -134,6 +220,7 @@ h1 {
 .board {
   width: 100%;
   text-align: center;
+  margin-top: 10px;
 }
 
 .question-card {
@@ -173,7 +260,7 @@ h1 {
 }
 
 .played-chip {
-  background: #3f6212; /* Verde oliva caldo */
+  background: #3f6212;
   color: white;
   padding: 3px 8px;
   border-radius: 4px;
@@ -181,9 +268,69 @@ h1 {
   font-size: 0.75rem;
 }
 
+#center-stage {
+  margin: 10px 0;
+  text-align: center;
+  width: 100%;
+}
+
+.zoomed-card {
+  background: linear-gradient(135deg, #fef08a, #f59e0b);
+  color: #2c221e;
+  width: 90px;
+  height: 130px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-weight: 900;
+  font-size: 3.5rem;
+  margin: 0 auto;
+  box-shadow: 0 8px 20px rgba(44, 34, 30, 0.2);
+  border: 3px solid #ffffff;
+}
+
+#last-play-info {
+  font-size: 0.85rem;
+  color: #78350f;
+  margin-top: 6px;
+  font-weight: bold;
+}
+
+.center-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-contest {
+  background: #b91c1c !important;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn-google {
+  background: #334155 !important;
+  color: white;
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.85rem;
+}
+
 .player-area {
   width: 100%;
   text-align: center;
+  margin-top: 10px;
 }
 
 .player-area h3 {
@@ -222,13 +369,15 @@ h1 {
   margin-top: 2px;
 }
 
-.input-area {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-  align-items: center;
-  margin-bottom: 4px;
+.card.clickable {
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+  border: 2px solid #dcd4c5;
+}
+
+.card.clickable:hover {
+  transform: translateY(-5px);
+  border-color: #b45309;
 }
 
 .input-wrapper {
@@ -264,9 +413,37 @@ h1 {
   width: 100%;
 }
 
-.action-buttons button {
-  width: 100%;
+.btn-send {
+  background: #3f6212 !important;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 0.95rem;
   cursor: pointer;
+}
+
+.btn-mic {
+  background: #b91c1c !important;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.btn-change-cat {
+  background: #9a3412 !important;
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  cursor: pointer;
+  margin-top: 2px;
 }
 
 .error-msg {
@@ -276,38 +453,6 @@ h1 {
   font-weight: bold;
 }
 
-/* Stile per la carta gigante al centro dello schermo */
-.zoomed-card {
-  background: linear-gradient(135deg, #fef08a, #f59e0b);
-  color: #2c221e;
-  width: 90px;
-  height: 130px;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  font-weight: 900;
-  font-size: 3.5rem;
-  margin: 0 auto;
-  box-shadow: 0 8px 20px rgba(44, 34, 30, 0.2);
-  border: 3px solid #ffffff;
-  animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes popIn {
-  0% { transform: scale(0.3); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-/* Carte della mano cliccabili in modalità "Siamo Vicini" */
-.card.clickable {
+button {
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s;
-  border: 2px solid #dcd4c5;
-}
-
-.card.clickable:hover {
-  transform: translateY(-5px);
-  border-color: #b45309;
 }
