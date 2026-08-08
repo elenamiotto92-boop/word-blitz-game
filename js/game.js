@@ -366,7 +366,7 @@ function submitTypedWord() {
 // ==========================================
 // FINE MANCHE E CALCOLO FULMINI
 // ==========================================
-function triggerRoundEnd(iClosedFirst) {
+function triggerRoundEnd(iClosedFirst, incomingCategory = null) {
   if (iClosedFirst) {
     // Tu hai chiuso per primo -> 0 fulmini di penalità per te in questa manche.
     if (!connection || !connection.open) {
@@ -375,12 +375,21 @@ function triggerRoundEnd(iClosedFirst) {
         bot.hand.forEach(c => botPenalties += c.lightnings);
         bot.lightnings += botPenalties;
       }
+    } else {
+      // Scegli tu la nuova categoria per la manche successiva e la invii all'amico
+      pickRandomCategory();
+      sendData({ type: 'ROUND_OVER', category: currentCategory, lightnings: playerLightnings });
     }
   } else {
     // L'avversario ha chiuso per primo -> tu sommi i fulmini delle tue carte rimanenti in mano
     let myPenalties = 0;
     playerHand.forEach(c => myPenalties += c.lightnings);
-    playerLightnings += myPenalties; // Somma ai fulmini precedenti
+    playerLightnings += myPenalties;
+    
+    // Imposta la categoria decisa dall'avversario
+    if (incomingCategory) {
+      currentCategory = incomingCategory;
+    }
   }
 
   // Aggiorna la grafica dei tuoi fulmini sul tuo schermo
@@ -392,8 +401,8 @@ function triggerRoundEnd(iClosedFirst) {
     botLightningsEl.innerText = bot.lightnings || 0;
   }
 
-  // INVIA I TUOI FULMINI TOTALI AGGIORNATI ALL'AVVERSARIO VIA RETE
-  if (typeof sendData === 'function' && connection && connection.open) {
+  // Invia i fulmini aggiornati all'avversario se non fatto prima
+  if (iClosedFirst && typeof sendData === 'function' && connection && connection.open) {
     sendData({ type: 'UPDATE_LIGHTNINGS', lightnings: playerLightnings });
   }
 
@@ -411,14 +420,11 @@ function triggerRoundEnd(iClosedFirst) {
     if (bot) bot.hand = drawHand();
   }
 
-  // Cambio categoria per la nuova manche
-  pickRandomCategory();
+  // Avvia la nuova manche con la categoria sincronizzata
   nextCategoryCard();
 }
 
-// ==========================================
-// COMANDI VOCALI (MICROFONO)
-// ==========================================
+
 function startVoiceRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
