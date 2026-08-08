@@ -211,7 +211,7 @@ function playCardLocal(cardIndex) {
   playerHand.splice(cardIndex, 1);
   renderHand();
 
-  lastPlayedWord = card.letter; // Memorizza per permettere la verifica Google anche in Vicini
+  lastPlayedWord = card.letter;
   showCenterStage(card.letter, "Hai giocato la lettera: DICI LA PAROLA A VOCE!");
   lastPlayerId = "TU";
 
@@ -227,8 +227,9 @@ function playCardLocal(cardIndex) {
   // CONTROLLO SE HAI FINITO TUTTE LE CARTE
   if (playerHand.length === 0) {
     alert("Hai svuotato la mano per primo! Fine della manche.");
+    pickRandomCategory(); // Sceglie la nuova categoria
     if (typeof sendData === 'function' && connection && connection.open) {
-      sendData({ type: 'ROUND_OVER' });
+      sendData({ type: 'ROUND_OVER', category: currentCategory, lightnings: playerLightnings });
     }
     triggerRoundEnd(true);
   }
@@ -266,8 +267,9 @@ function processPlayerWord(typedWord) {
       if (bot) bot.stopThinking();
     }
     alert("HAI SVUOTATO LA MANO! Fine della manche.");
+    pickRandomCategory(); // Sceglie la nuova categoria
     if (typeof sendData === 'function' && connection && connection.open) {
-      sendData({ type: 'ROUND_OVER' });
+      sendData({ type: 'ROUND_OVER', category: currentCategory, lightnings: playerLightnings });
     }
     triggerRoundEnd(true);
   }
@@ -364,46 +366,42 @@ function submitTypedWord() {
 }
 
 // ==========================================
-// FINE MANCHE E CALCOLO FULMINI
+// FINE MANCHE E CALCOLO FULMINI (SINCRONIZZATO)
 // ==========================================
-function triggerRoundEnd(iClosedFirst, incomingCategory = null) {
+function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnings = null) {
   if (iClosedFirst) {
-    // Tu hai chiuso per primo -> 0 fulmini di penalità per te in questa manche.
+    // Hai chiuso tu per primo -> 0 punti di penalità in questa manche per te
     if (!connection || !connection.open) {
       if (bot && bot.hand) {
         let botPenalties = 0;
         bot.hand.forEach(c => botPenalties += c.lightnings);
         bot.lightnings += botPenalties;
       }
-    } else {
-      // Scegli tu la nuova categoria per la manche successiva e la invii all'amico
-      pickRandomCategory();
-      sendData({ type: 'ROUND_OVER', category: currentCategory, lightnings: playerLightnings });
     }
   } else {
-    // L'avversario ha chiuso per primo -> tu sommi i fulmini delle tue carte rimanenti in mano
+    // Ha chiuso l'avversario -> sommi i fulmini delle tue carte rimaste in mano
     let myPenalties = 0;
     playerHand.forEach(c => myPenalties += c.lightnings);
     playerLightnings += myPenalties;
-    
-    // Imposta la categoria decisa dall'avversario
+
     if (incomingCategory) {
       currentCategory = incomingCategory;
     }
   }
 
-  // Aggiorna la grafica dei tuoi fulmini sul tuo schermo
+  // Se l'avversario ha mandato i suoi fulmini aggiornati nel pacchetto, aggiornali a schermo
+  if (incomingLightnings !== null) {
+    const botLightningsEl = document.getElementById('bot-lightnings');
+    if (botLightningsEl) botLightningsEl.innerText = incomingLightnings;
+  }
+
+  // Aggiorna la grafica dei tuoi fulmini
   const playerLightningsEl = document.getElementById('player-lightnings');
   if (playerLightningsEl) playerLightningsEl.innerText = playerLightnings;
   
   const botLightningsEl = document.getElementById('bot-lightnings');
   if (botLightningsEl && bot) {
     botLightningsEl.innerText = bot.lightnings || 0;
-  }
-
-  // Invia i fulmini aggiornati all'avversario se non fatto prima
-  if (iClosedFirst && typeof sendData === 'function' && connection && connection.open) {
-    sendData({ type: 'UPDATE_LIGHTNINGS', lightnings: playerLightnings });
   }
 
   // Controllo fine partita (40 fulmini)
@@ -420,11 +418,13 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null) {
     if (bot) bot.hand = drawHand();
   }
 
-  // Avvia la nuova manche con la categoria sincronizzata
+  // Avvia la nuova manche con la categoria corretta
   nextCategoryCard();
 }
 
-
+// ==========================================
+// COMANDI VOCALI (MICROFONO)
+// ==========================================
 function startVoiceRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
