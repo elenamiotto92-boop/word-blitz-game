@@ -23,13 +23,18 @@ function createRoom() {
     if (typeof bot !== 'undefined') bot.stopThinking();
 
     setTimeout(() => {
-      // 1. L'host genera la categoria e avvia la sua schermata
+      // SALVAVITA: Controlla se il dizionario è rotto
+      if (typeof DICTIONARY === 'undefined') {
+        alert("⚠️ ERRORE: Il file dictionary.js è rotto! Controlla di non aver dimenticato una virgola tra le categorie.");
+        document.getElementById('connection-status').innerText = "Errore nel dizionario. Sistema il file!";
+        return;
+      }
+
       const categories = Object.keys(DICTIONARY);
       currentCategory = categories[Math.floor(Math.random() * categories.length)];
       
       startMultiplayerGame(currentCategory);
       
-      // 2. Invia subito il segnale di avvio all'amico con la categoria e la MODALITÀ scelta (VICINI o LONTANI)
       sendData({ 
         type: 'START_MULTIPLAYER', 
         category: currentCategory,
