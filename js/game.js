@@ -168,24 +168,24 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
   const playedWordsEl = document.getElementById('played-words');
   if (playedWordsEl) playedWordsEl.appendChild(chip);
 
-  if (wordsPlayedOnCard >= MAX_WORDS) {
+ if (wordsPlayedOnCard >= MAX_WORDS) {
+    // 👉 Aspetta un attimo prima di cambiare categoria, dando il tempo di leggere e contestare l'ultima parola!
     if (!connection || !connection.open) {
       if (bot) bot.stopThinking();
       setTimeout(() => {
         pickRandomCategory();
         nextCategoryCard();
-      }, 1200);
+      }, 4000); // Portato a 4 secondi per dare tempo di contestare
     } else {
       if (isPlayer) {
         setTimeout(() => {
           pickRandomCategory();
           sendData({ type: 'CHANGE_CATEGORY_ONLY', category: currentCategory });
           nextCategoryCard();
-        }, 1200);
+        }, 4000); // 4 secondi anche in multiplayer prima del cambio automatico
       }
     }
   }
-}
 
 function playCardLocal(cardIndex) {
   if (wordsPlayedOnCard >= MAX_WORDS) return;
