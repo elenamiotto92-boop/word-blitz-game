@@ -211,6 +211,7 @@ function playCardLocal(cardIndex) {
   playerHand.splice(cardIndex, 1);
   renderHand();
 
+  lastPlayedWord = card.letter; // Memorizza per permettere la verifica Google anche in Vicini
   showCenterStage(card.letter, "Hai giocato la lettera: DICI LA PAROLA A VOCE!");
   lastPlayerId = "TU";
 
@@ -283,7 +284,7 @@ function showCenterStage(letter, infoText) {
   if (infoEl) infoEl.innerText = infoText;
 
   if (googleBtn) {
-    if (gameMode === 'LONTANI' && lastPlayedWord) {
+    if (lastPlayedWord) {
       googleBtn.style.display = 'inline-block';
       googleBtn.href = `https://www.google.com/search?q=significato+${encodeURIComponent(lastPlayedWord)}`;
     } else {
@@ -340,7 +341,7 @@ function handleBotPlay(card, word) {
     bot.stopThinking();
     setTimeout(() => {
       alert("Il Bot ha svuotato la mano! Fine della manche.");
-      triggerRoundEnd(false); // Il bot ha chiuso, tu prendi i fulmini
+      triggerRoundEnd(false); 
     }, 500);
   }
 }
@@ -367,8 +368,7 @@ function submitTypedWord() {
 // ==========================================
 function triggerRoundEnd(iClosedFirst) {
   if (iClosedFirst) {
-    // Tu hai chiuso per primo -> 0 fulmini per te.
-    // Se siamo in singolo contro il bot, calcoliamo i fulmini del bot:
+    // Tu hai chiuso per primo -> 0 fulmini di penalità per te in questa manche.
     if (!connection || !connection.open) {
       if (bot && bot.hand) {
         let botPenalties = 0;
@@ -377,23 +377,26 @@ function triggerRoundEnd(iClosedFirst) {
       }
     }
   } else {
-    // L'avversario ha chiuso per primo -> tu prendi i fulmini delle tue carte rimanenti in mano
+    // L'avversario ha chiuso per primo -> tu sommi i fulmini delle tue carte rimanenti in mano
     let myPenalties = 0;
     playerHand.forEach(c => myPenalties += c.lightnings);
-    playerLightnings += myPenalties;
+    playerLightnings += myPenalties; // Somma ai fulmini precedenti
   }
 
-// Aggiorna la grafica dei fulmini
+  // Aggiorna la grafica dei tuoi fulmini sul tuo schermo
   const playerLightningsEl = document.getElementById('player-lightnings');
   if (playerLightningsEl) playerLightningsEl.innerText = playerLightnings;
   
   const botLightningsEl = document.getElementById('bot-lightnings');
-  if (botLightningsEl) botLightningsEl.innerText = bot.lightnings || 0;
+  if (botLightningsEl && bot) {
+    botLightningsEl.innerText = bot.lightnings || 0;
+  }
 
-  // ⚡ INVIA I TUOI FULMINI AGGIORNATI ALL'AVVERSARIO VIA RETE
+  // INVIA I TUOI FULMINI TOTALI AGGIORNATI ALL'AVVERSARIO VIA RETE
   if (typeof sendData === 'function' && connection && connection.open) {
     sendData({ type: 'UPDATE_LIGHTNINGS', lightnings: playerLightnings });
   }
+
   // Controllo fine partita (40 fulmini)
   if (playerLightnings >= MAX_LIGHTNINGS || (bot && bot.lightnings >= MAX_LIGHTNINGS)) {
     alert("FINE PARTITA - 40 FULMINI RAGGIUNTI!");
