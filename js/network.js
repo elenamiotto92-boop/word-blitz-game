@@ -155,7 +155,8 @@ function setupDataListener() {
         botLightningsEl.innerText = data.lightnings;
       }
     }
-
+});
+}
 function sendData(payload) {
   if (connection && connection.open) {
     connection.send(payload);
