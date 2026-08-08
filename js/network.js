@@ -1,6 +1,7 @@
 let peer = null;
 let connection = null;
 let isHost = false;
+let dataListenerAttached = false; 
 
 function showMultiplayerSetup() {
   document.getElementById('multiplayer-setup').style.display = 'block';
@@ -64,41 +65,45 @@ function joinRoom() {
   });
 }
 
+
+
 function setupDataListener() {
-  if (!connection) return;
+  // Evita che il telefono si metta in ascolto doppio!
+  if (!connection || dataListenerAttached) return;
+  dataListenerAttached = true;
 
   connection.on('data', (data) => {
     // RICEZIONE AVVIO PARTITA
     if (data.type === 'START_MULTIPLAYER') {
       if (data.mode) {
-        gameMode = data.mode; // Sincronizza la modalità del gioco (VICINI / LONTANI)
+        gameMode = data.mode;
       }
       startMultiplayerGame(data.category);
     }
 
-    // MODALITÀ VICINI: L'avversario ha premuto una carta lettera (dichiara la parola a voce)
+    // MODALITÀ VICINI: L'avversario gioca la carta
     if (data.type === 'PLAY_CARD_STAGE') {
       showCenterStage(data.letter, "L'avversario ha giocato questa lettera (ha parlato a voce)");
       lastPlayerId = "AVVERSARIO";
-      registerWordPlay(`[LETTERA ${data.letter}]`, false, isHost ? "AMICO" : "HOST");
+      registerWordPlay(`[LETTERA ${data.letter}]`, false, "AMICO"); // <-- Chiamerà sempre AMICO
     }
 
-    // MODALITÀ LONTANI: L'avversario ha scritto una parola (senza controllo IA)
+    // MODALITÀ LONTANI: L'avversario scrive la parola
     if (data.type === 'PLAY_WORD_REMOTE') {
       lastPlayedWord = data.word;
       showCenterStage(data.letter, `L'avversario ha scritto: "${data.word}"`);
       lastPlayerId = "AVVERSARIO";
-      registerWordPlay(data.word, false, isHost ? "AMICO" : "HOST");
+      registerWordPlay(data.word, false, "AMICO"); // <-- Chiamerà sempre AMICO
     }
 
-    // GESTIONE CONTESTAZIONI: L'avversario ha premuto il tasto "CONTESTA"
+    // GESTIONE CONTESTAZIONI
     if (data.type === 'CONTEST_PLAY') {
       if (lastPlayerId === "TU") {
         assignPenaltyCard("L'avversario ha contestato la tua parola!");
       }
     }
 
-    // CAMBIO CATEGORIA CON PENALITÀ: L'avversario ha premuto "Cambia Categoria (+1 Carta)"
+    // CAMBIO CATEGORIA CON PENALITÀ
     if (data.type === 'PENALTY_CARD_BOTH') {
       const penaltyCard = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
       playerHand.push({ ...penaltyCard, id: Math.random() });
@@ -107,7 +112,7 @@ function setupDataListener() {
       if (errorMsg) errorMsg.innerText = "L'avversario ha cambiato categoria! +1 carta a testa.";
     }
 
-    // CAMBIO CATEGORIA REGOLARE
+    // CAMBIO CATEGORIA REGOLARE (Comandato solo dall'Host)
     if (data.type === 'CHANGE_CATEGORY') {
       currentCategory = data.category;
       wordsPlayedOnCard = 0;
@@ -118,13 +123,15 @@ function setupDataListener() {
       const countEl = document.getElementById('words-count');
       if (countEl) countEl.innerText = "0";
       
-      // Nascondi la carta centrale quando cambia la categoria
       const stage = document.getElementById('center-stage');
       if (stage) stage.style.display = 'none';
+      
+      // Quando arriva la nuova categoria, rimischia la mano bilanciata per quella categoria!
+      playerHand = drawHand();
+      renderHand();
     }
   });
 }
-
 function sendData(payload) {
   if (connection && connection.open) {
     connection.send(payload);
