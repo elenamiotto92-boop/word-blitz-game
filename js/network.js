@@ -125,10 +125,10 @@ function setupDataListener() {
       renderHand(); // Aggiorna la visualizzazione tenendo le stesse carte
     }
 
-    // 7. L'avversario ha finito le carte per primo (Fine Manche)
+    // 7. L'avversario ha finito le carte per primo (Fine Manche sincronizzata)
     if (data.type === 'ROUND_OVER') {
       alert("L'avversario ha svuotato la mano per primo! Conteggio fulmini.");
-      triggerRoundEnd(false); // false = ha chiuso l'avversario, tu prendi i fulmini delle tue carte in mano
+      triggerRoundEnd(false, data.category); // Passa la categoria sincronizzata dell'avversario
     }
 
     // 8. Vecchio comando di cambio categoria completo (mantenuto per compatibilità)
@@ -148,15 +148,17 @@ function setupDataListener() {
       playerHand = drawHand();
       renderHand();
     }
-  // Aggiorna i fulmini dell'avversario a schermo
+
+    // 9. Aggiorna i fulmini dell'avversario a schermo
     if (data.type === 'UPDATE_LIGHTNINGS') {
       const botLightningsEl = document.getElementById('bot-lightnings');
       if (botLightningsEl) {
         botLightningsEl.innerText = data.lightnings;
       }
     }
-});
+  });
 }
+
 function sendData(payload) {
   if (connection && connection.open) {
     connection.send(payload);
