@@ -148,8 +148,13 @@ function setupDataListener() {
       playerHand = drawHand();
       renderHand();
     }
-  });
-}
+  // Aggiorna i fulmini dell'avversario a schermo
+    if (data.type === 'UPDATE_LIGHTNINGS') {
+      const botLightningsEl = document.getElementById('bot-lightnings');
+      if (botLightningsEl) {
+        botLightningsEl.innerText = data.lightnings;
+      }
+    }
 
 function sendData(payload) {
   if (connection && connection.open) {
