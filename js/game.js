@@ -213,19 +213,27 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
 
   if (wordsPlayedOnCard >= MAX_WORDS) {
     if (!connection || !connection.open) bot.stopThinking();
-    setTimeout(() => {
-      const categories = Object.keys(DICTIONARY);
-      currentCategory = categories[Math.floor(Math.random() * categories.length)];
-      
-      if (typeof isHost !== 'undefined' && isHost && connection && connection.open) {
-        sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
+    
+    // Se stiamo giocando in Multiplayer con un amico
+    if (typeof isHost !== 'undefined' && connection && connection.open) {
+      // SOLO l'Host calcola la nuova categoria e la invia (l'ospite aspetta obbediente)
+      if (isHost) {
+        setTimeout(() => {
+          const categories = Object.keys(DICTIONARY);
+          currentCategory = categories[Math.floor(Math.random() * categories.length)];
+          sendData({ type: 'CHANGE_CATEGORY', category: currentCategory });
+          nextCategoryCard();
+        }, 1200);
       }
-      
-      nextCategoryCard();
-    }, 1200);
+    } else {
+      // Se stiamo giocando da soli contro l'IA
+      setTimeout(() => {
+        const categories = Object.keys(DICTIONARY);
+        currentCategory = categories[Math.floor(Math.random() * categories.length)];
+        nextCategoryCard();
+      }, 1200);
+    }
   }
-}
-
 // ==========================================
 // MODALITÀ "SIAMO VICINI" E "SIAMO LONTANI"
 // ==========================================
