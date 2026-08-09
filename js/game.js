@@ -32,7 +32,6 @@ function selectGameMode(mode) {
     if (mode === 'VICINI') {
       labelEl.innerText = "📍 Modalità: SIAMO VICINI (Tocca la carta e parla)";
     } else {
-      // 👉 Qui c'è l'Opzione 1 inserita perfettamente
       labelEl.innerText = "🌍 Modalità Lontani: Nessun correttore o T9 attivo. Scrivi liberamente la tua parola: verrà accettata dal sistema, ma attenzione! Il tuo avversario potrà verificarla con il tasto Google e contestarla se è errata o fuori tema, facendoti pescare una carta di penalità.";
     }
   }
@@ -168,24 +167,24 @@ function registerWordPlay(word, isPlayer = true, customName = null) {
   const playedWordsEl = document.getElementById('played-words');
   if (playedWordsEl) playedWordsEl.appendChild(chip);
 
- if (wordsPlayedOnCard >= MAX_WORDS) {
-    // 👉 Aspetta un attimo prima di cambiare categoria, dando il tempo di leggere e contestare l'ultima parola!
+  if (wordsPlayedOnCard >= MAX_WORDS) {
     if (!connection || !connection.open) {
       if (bot) bot.stopThinking();
       setTimeout(() => {
         pickRandomCategory();
         nextCategoryCard();
-      }, 4000); // Portato a 4 secondi per dare tempo di contestare
+      }, 4000);
     } else {
       if (isPlayer) {
         setTimeout(() => {
           pickRandomCategory();
           sendData({ type: 'CHANGE_CATEGORY_ONLY', category: currentCategory });
           nextCategoryCard();
-        }, 4000); // 4 secondi anche in multiplayer prima del cambio automatico
+        }, 4000);
       }
     }
   }
+}
 
 function playCardLocal(cardIndex) {
   if (wordsPlayedOnCard >= MAX_WORDS) return;
@@ -206,9 +205,6 @@ function playCardLocal(cardIndex) {
 
   registerWordPlay(`[LETTERA ${card.letter}]`, true);
   
-  const countEl = document.getElementById('words-count');
-  if (countEl) countEl.innerText = wordsPlayedOnCard;
-
   if (playerHand.length === 0) {
     alert("Hai svuotato la mano per primo! Fine della manche.");
     pickRandomCategory();
@@ -380,7 +376,7 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
     botLightningsEl.innerText = bot.lightnings || 0;
   }
 
- if (typeof sendData === 'function' && connection && connection.open) {
+  if (typeof sendData === 'function' && connection && connection.open) {
     sendData({ type: 'UPDATE_LIGHTNINGS', lightnings: playerLightnings });
   }
 
@@ -419,11 +415,11 @@ function startVoiceRecognition() {
 
   recognition.start();
 
- recognition.onresult = (event) => {
+  recognition.onresult = (event) => {
     const spokenWord = event.results[0][0].transcript.trim().toUpperCase();
     if (micButton) micButton.style.background = '#e74c3c';
     if (errorMsg) errorMsg.innerText = "";
-    processPlayerWord(spokenWord); // 👉 Passa tutta la frase completa!
+    processPlayerWord(spokenWord);
   };
 
   recognition.onerror = () => {
