@@ -408,34 +408,34 @@ const DICTIONARY = {
   ]
 };
 
-  "Cartoni animati": [],
-  "Parole che non si usano spesso": [],
-  "In giardino": [],
-  "Lo porti in piscina": [],
-  "Lo usi d'estate": [],
-  "Lo usi d'inverno": [],
-  "Oggetti piccoli": [],
-  "Oggetti grandi": [],
-  "Oggetti pesanti": [],
-  "Oggetti leggeri": [],
-  "Mete per una vacanza": [],
-  "Marchi di auto": [],
-  "Programmi TV": [],
-  "Personaggi famosi": [],
-  "Lo è la persona con cui stai giocando": [],
-  "Un hobby": [],
-  "Un hobby pericoloso": [],
-  " Animale marino": [],
-  " Sa volare": [],
-  " Un alcolico": [],
-  " Sport di squadra": [],
-  " Squadre di calcio": [],
-  " Ha un motore": [],
-  " Lo trovi in acqua": [],
-  " Un sentimento": [],
-  " Quando sei giù di morale": []
+ const DICTIONARY = {
+  "CARTONI ANIMATI": [],
+  "PAROLE CHE NON SI USANO SPESSO": [],
+  "IN GIARDINO": [],
+  "LO PORTI IN PISCINA": [],
+  "LO USI D'ESTATE": [],
+  "LO USI D'INVERNO": [],
+  "OGGETTI PICCOLI": [],
+  "OGGETTI GRANDI": [],
+  "OGGETTI PESANTI": [],
+  "OGGETTI LEGGERI": [],
+  "METE PER UNA VACANZA": [],
+  "MARCHI DI AUTO": [],
+  "PROGRAMMI TV": [],
+  "PERSONAGGI FAMOSI": [],
+  "LO È LA PERSONA CON CUI STAI GIOCANDO": [],
+  "UN HOBBY": [],
+  "UN HOBBY PERICOLOSO": [],
+  "ANIMALE MARINO": [],
+  "SA VOLARE": [],
+  "UN ALCOLICO": [],
+  "SPORT DI SQUADRA": [],
+  "SQUADRE DI CALCIO": [],
+  "HA UN MOTORE": [],
+  "LO TROVI IN ACQUA": [],
+  "UN SENTIMENTO": [],
+  "QUANDO SEI GIÙ DI MORALE": []
 };
-
 
 // Funzione globale per la validazione automatica (Semplificata per il nuovo formato)
 function validateWord(category, word) {
