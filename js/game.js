@@ -347,6 +347,30 @@ function drawHand() {
   }
   return hand;
 }
+function checkGameWinCondition() {
+  let opponentScore = 0;
+  if (bot) {
+    opponentScore = parseInt(bot.lightnings, 10) || 0;
+  } else {
+    const botEl = document.getElementById('bot-lightnings');
+    opponentScore = botEl ? (parseInt(botEl.innerText, 10) || 0) : 0;
+  }
+
+  // Controllo Sconfitta (Tu arrivi a 40)
+  if (playerLightnings >= MAX_LIGHTNINGS) {
+    showGameOverModal(false, "Hai raggiunto 40 fulmini... Peccato, ha vinto l'avversario!");
+    return true;
+  }
+
+  // Controllo Vittoria (L'avversario arriva a 40)
+  if (opponentScore >= MAX_LIGHTNINGS) {
+    showGameOverModal(true, "L'avversario ha raggiunto 40 fulmini! Complimenti, hai vinto la partita!");
+    return true;
+  }
+
+  return false;
+}
+
 
 function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnings = null) {
   if (bot && (typeof bot.lightnings !== 'number' || isNaN(bot.lightnings))) {
@@ -400,36 +424,9 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
     sendData({ type: 'UPDATE_LIGHTNINGS', lightnings: playerLightnings });
   }
 
-  // Calcola il punteggio dell'avversario in modo sicuro
-  let opponentScore = 0;
-  if (bot) {
-    opponentScore = parseInt(bot.lightnings, 10) || 0;
-  } else {
-    const botEl = document.getElementById('bot-lightnings');
-    opponentScore = botEl ? (parseInt(botEl.innerText, 10) || 0) : 0;
-  }
-
-  // 1. Se hai chiuso tu per primo e l'avversario arriva a 40 -> HAI VINTO 🏆
-  if (iClosedFirst && opponentScore >= MAX_LIGHTNINGS) {
-    showGameOverModal(true, "L'avversario ha raggiunto 40 fulmini! Complimenti, hai vinto la partita!");
-    return;
-  }
-
-  // 2. Se ha chiuso l'avversario per primo e tu arrivi a 40 -> HAI PERSO 💀
-  if (!iClosedFirst && playerLightnings >= MAX_LIGHTNINGS) {
-    showGameOverModal(false, "Hai raggiunto 40 fulmini... Peccato, ha vinto l'avversario!");
-    return;
-  }
-
-  // Controlli di sicurezza generali
-  if (playerLightnings >= MAX_LIGHTNINGS) {
-    showGameOverModal(false, "Hai raggiunto 40 fulmini... Peccato, ha vinto l'avversario!");
-    return;
-  }
-
-  if (opponentScore >= MAX_LIGHTNINGS) {
-    showGameOverModal(true, "L'avversario ha raggiunto 40 fulmini! Complimenti, hai vinto la partita!");
-    return;
+  // 👇 VERIFICA IMMEDIATA DELLA VITTORIA / SCONFITTA
+  if (checkGameWinCondition()) {
+    return; // Interrompe tutto e blocca la nuova manche se qualcuno è a 40+
   }
 
   alert("Nuova manche! Distribuite 7 nuove carte a tutti.");
@@ -441,7 +438,6 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
 
   nextCategoryCard();
 }
-
 
 function showGameOverModal(isVictory, message) {
   const modal = document.getElementById('game-over-modal');
