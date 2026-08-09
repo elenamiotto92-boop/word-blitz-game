@@ -349,11 +349,16 @@ function drawHand() {
 }
 function checkGameWinCondition() {
   let opponentScore = 0;
-  if (bot) {
-    opponentScore = parseInt(bot.lightnings, 10) || 0;
+  
+  if (typeof bot !== 'undefined' && bot && typeof bot.lightnings === 'number') {
+    opponentScore = bot.lightnings;
   } else {
     const botEl = document.getElementById('bot-lightnings');
-    opponentScore = botEl ? (parseInt(botEl.innerText, 10) || 0) : 0;
+    if (botEl) {
+      // Estrae il numero esatto anche se c'è del testo intorno (es. "Fulmini avversario: 43 / 40")
+      const match = botEl.innerText.match(/\d+/);
+      opponentScore = match ? parseInt(match[0], 10) : 0;
+    }
   }
 
   // Controllo Sconfitta (Tu arrivi a 40)
@@ -370,7 +375,6 @@ function checkGameWinCondition() {
 
   return false;
 }
-
 
 function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnings = null) {
   if (bot && (typeof bot.lightnings !== 'number' || isNaN(bot.lightnings))) {
