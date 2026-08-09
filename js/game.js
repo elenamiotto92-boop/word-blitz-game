@@ -349,8 +349,7 @@ function drawHand() {
 }
 
 function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnings = null) {
-  // Inizializza in sicurezza i fulmini del bot se non esistono
-  if (bot && typeof bot.lightnings !== 'number') {
+  if (bot && (typeof bot.lightnings !== 'number' || isNaN(bot.lightnings))) {
     bot.lightnings = 0;
   }
 
@@ -401,8 +400,28 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
     sendData({ type: 'UPDATE_LIGHTNINGS', lightnings: playerLightnings });
   }
 
-  let opponentScore = bot ? bot.lightnings : (parseInt(document.getElementById('bot-lightnings')?.innerText) || 0);
+  // Calcola il punteggio dell'avversario in modo sicuro
+  let opponentScore = 0;
+  if (bot) {
+    opponentScore = parseInt(bot.lightnings, 10) || 0;
+  } else {
+    const botEl = document.getElementById('bot-lightnings');
+    opponentScore = botEl ? (parseInt(botEl.innerText, 10) || 0) : 0;
+  }
 
+  // 1. Se hai chiuso tu per primo e l'avversario arriva a 40 -> HAI VINTO 🏆
+  if (iClosedFirst && opponentScore >= MAX_LIGHTNINGS) {
+    showGameOverModal(true, "L'avversario ha raggiunto 40 fulmini! Complimenti, hai vinto la partita!");
+    return;
+  }
+
+  // 2. Se ha chiuso l'avversario per primo e tu arrivi a 40 -> HAI PERSO 💀
+  if (!iClosedFirst && playerLightnings >= MAX_LIGHTNINGS) {
+    showGameOverModal(false, "Hai raggiunto 40 fulmini... Peccato, ha vinto l'avversario!");
+    return;
+  }
+
+  // Controlli di sicurezza generali
   if (playerLightnings >= MAX_LIGHTNINGS) {
     showGameOverModal(false, "Hai raggiunto 40 fulmini... Peccato, ha vinto l'avversario!");
     return;
@@ -422,6 +441,8 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
 
   nextCategoryCard();
 }
+
+
 function showGameOverModal(isVictory, message) {
   const modal = document.getElementById('game-over-modal');
   const title = document.getElementById('modal-title');
@@ -444,22 +465,29 @@ function showGameOverModal(isVictory, message) {
 }
 
 function triggerPenaltyEffect() {
-  // Fa tremare il contenitore principale del gioco
+  // 1. Effetto scossa sullo schermo
   const container = document.getElementById('game-container') || document.body;
-  container.classList.add('shake-animation');
-  setTimeout(() => {
+  if (container) {
     container.classList.remove('shake-animation');
-  }, 400);
+    void container.offsetWidth; // 👈 Trucco per forzare il riavvio dell'animazione
+    container.classList.add('shake-animation');
+    setTimeout(() => {
+      container.classList.remove('shake-animation');
+    }, 400);
+  }
 
-  // Fa lampeggiare di rosso il contatore dei fulmini
+  // 2. Effetto lampeggio rosso sul contatore fulmini
   const lightningEl = document.getElementById('player-lightnings');
   if (lightningEl) {
+    lightningEl.classList.remove('flash-warning');
+    void lightningEl.offsetWidth; // 👈 Trucco per forzare il riavvio dell'animazione
     lightningEl.classList.add('flash-warning');
     setTimeout(() => {
       lightningEl.classList.remove('flash-warning');
     }, 600);
   }
 }
+
 
 function startVoiceRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
