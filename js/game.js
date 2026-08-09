@@ -7,6 +7,7 @@ let lastPlayerId = null;
 let lastPlayedWord = "";
 
 let currentCategory = "";
+let availableCategories = [];
 let wordsPlayedOnCard = 0;
 let playerHand = [];
 let playerLightnings = 0;
@@ -435,6 +436,16 @@ function startVoiceRecognition() {
 
 function pickRandomCategory() {
   if (typeof DICTIONARY === 'undefined') return;
-  const categories = Object.keys(DICTIONARY);
-  currentCategory = categories[Math.floor(Math.random() * categories.length)];
+
+  // Se la lista delle categorie disponibili è vuota (all'inizio o se sono finite), la riempiamo
+  if (availableCategories.length === 0) {
+    availableCategories = Object.keys(DICTIONARY);
+  }
+
+  // Peschiamo un indice a caso tra le categorie ancora disponibili nella lista
+  const randomIndex = Math.floor(Math.random() * availableCategories.length);
+  currentCategory = availableCategories[randomIndex];
+
+  // Rimuoviamo la categoria appena pescata così non potrà uscire di nuovo
+  availableCategories.splice(randomIndex, 1);
 }
