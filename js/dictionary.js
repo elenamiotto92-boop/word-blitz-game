@@ -424,10 +424,16 @@ const DICTIONARY = {
   "Personaggi famosi": [],
   "Lo è la persona con cui stai giocando": [],
   "Un hobby": [],
-  "Un hobby persicoloso": [],
+  "Un hobby pericoloso": [],
   " Animale marino": [],
   " Sa volare": [],
-  " Un alcolico": []
+  " Un alcolico": [],
+  " Sport di squadra": [],
+  " Squadre di calcio": [],
+  " Ha un motore": [],
+  " Lo trovi in acqua": [],
+  " Un sentimento": [],
+  " Quando sei giù di morale": []
 };
 
 
