@@ -408,6 +408,23 @@ const DICTIONARY = {
   ]
 };
 
+  "Cartoni animati": [],
+  "Parole che non si usano spesso": [],
+  "In giardino": [],
+  "Lo porti in piscina": [],
+  "Lo usi d'estate": [],
+  "Lo usi d'inverno": [],
+  "Oggetti piccoli": [],
+  "Oggetti grandi": [],
+  "Oggetti pesanti": [],
+  "Oggetti leggeri": [],
+  "Mete per una vacanza": [],
+  "Marchi di auto": [],
+  "Programmi TV": [],
+  "Personaggi famosi": []
+};
+
+
 // Funzione globale per la validazione automatica (Semplificata per il nuovo formato)
 function validateWord(category, word) {
   const cleanWord = word.trim().toUpperCase();
