@@ -405,7 +405,7 @@ const DICTIONARY = {
     "APRIBOTTIGLIE", "ASCIUGAMANO", "BICCHIERE", "BILANCIA", "CAFFETTIERA", "COLTELLO",
     "CUCCHIAIO", "CUCCHIAINO", "FORCHETTA", "FORNO", "FRIGORIFERO", "GRATTUGIA", "LAVANDINO",
     "MESTOLO", "MICROONDE", "PENTOLA", "PIATTO", "SCOLAPASTA", "TAZZA", "TOSTAPANE"
-  ]
+  ],
 };
 
  const DICTIONARY = {
@@ -434,7 +434,7 @@ const DICTIONARY = {
   "HA UN MOTORE": [],
   "LO TROVI IN ACQUA": [],
   "UN SENTIMENTO": [],
-  "QUANDO SEI GIÙ DI MORALE": []
+  "QUANDO SEI GIÙ DI MORALE": [],
 };
 
 // Funzione globale per la validazione automatica (Semplificata per il nuovo formato)
