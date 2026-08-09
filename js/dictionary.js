@@ -421,7 +421,13 @@ const DICTIONARY = {
   "Mete per una vacanza": [],
   "Marchi di auto": [],
   "Programmi TV": [],
-  "Personaggi famosi": []
+  "Personaggi famosi": [],
+  "Lo è la persona con cui stai giocando": [],
+  "Un hobby": [],
+  "Un hobby persicoloso": [],
+  " Animale marino": [],
+  " Sa volare": [],
+  " Un alcolico": []
 };
 
 
