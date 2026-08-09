@@ -406,8 +406,6 @@ const DICTIONARY = {
     "CUCCHIAIO", "CUCCHIAINO", "FORCHETTA", "FORNO", "FRIGORIFERO", "GRATTUGIA", "LAVANDINO",
     "MESTOLO", "MICROONDE", "PENTOLA", "PIATTO", "SCOLAPASTA", "TAZZA", "TOSTAPANE"
   ],
-};
-
   "CARTONI ANIMATI": [],
   "PAROLE CHE NON SI USANO SPESSO": [],
   "IN GIARDINO": [],
@@ -433,7 +431,7 @@ const DICTIONARY = {
   "HA UN MOTORE": [],
   "LO TROVI IN ACQUA": [],
   "UN SENTIMENTO": [],
-  "QUANDO SEI GIÙ DI MORALE": [],
+  "QUANDO SEI GIÙ DI MORALE": []
 };
 
 // Funzione globale per la validazione automatica (Semplificata per il nuovo formato)
