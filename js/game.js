@@ -385,9 +385,16 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
     sendData({ type: 'UPDATE_LIGHTNINGS', lightnings: playerLightnings });
   }
 
-  if (playerLightnings >= MAX_LIGHTNINGS || (bot && bot.lightnings >= MAX_LIGHTNINGS)) {
-    alert("FINE PARTITA - 40 FULMINI RAGGIUNTI!");
-    location.reload();
+ // Controlla se qualcuno ha perso (raggiunto o superato 40 fulmini)
+  let opponentScore = bot ? bot.lightnings : (parseInt(document.getElementById('bot-lightnings')?.innerText) || 0);
+
+  if (playerLightnings >= MAX_LIGHTNINGS) {
+    showGameOverModal(false, "Hai raggiunto 40 fulmini... Peccato, ha vinto l'avversario!");
+    return;
+  }
+
+  if (opponentScore >= MAX_LIGHTNINGS) {
+    showGameOverModal(true, "L'avversario ha raggiunto 40 fulmini! Complimenti, hai vinto la partita!");
     return;
   }
 
@@ -398,6 +405,27 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
   }
 
   nextCategoryCard();
+}
+
+function showGameOverModal(isVictory, message) {
+  const modal = document.getElementById('game-over-modal');
+  const title = document.getElementById('modal-title');
+  const text = document.getElementById('modal-message');
+  
+  if (modal && title && text) {
+    if (isVictory) {
+      title.innerText = "🏆 VITTORIA! 🏆";
+      title.style.color = "#3f6212";
+    } else {
+      title.innerText = "💀 SCONFITTA 💀";
+      title.style.color = "#b91c1c";
+    }
+    text.innerText = message;
+    modal.style.display = 'flex';
+  } else {
+    alert(message);
+    location.reload();
+  }
 }
 
 function triggerPenaltyEffect() {
