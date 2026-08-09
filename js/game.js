@@ -364,7 +364,10 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
       currentCategory = incomingCategory;
     }
   }
-
+// 👇 Se i tuoi fulmini sono aumentati rispetto a prima, fai partire l'effetto scossa!
+  if (playerLightnings > oldLightnings) {
+    triggerPenaltyEffect();
+  }
   if (incomingLightnings !== null && incomingLightnings !== undefined) {
     const botLightningsEl = document.getElementById('bot-lightnings');
     if (botLightningsEl) botLightningsEl.innerText = incomingLightnings;
