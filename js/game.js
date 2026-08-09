@@ -396,6 +396,24 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
   nextCategoryCard();
 }
 
+function triggerPenaltyEffect() {
+  // Fa tremare il contenitore principale del gioco
+  const container = document.getElementById('game-container') || document.body;
+  container.classList.add('shake-animation');
+  setTimeout(() => {
+    container.classList.remove('shake-animation');
+  }, 400);
+
+  // Fa lampeggiare di rosso il contatore dei fulmini
+  const lightningEl = document.getElementById('player-lightnings');
+  if (lightningEl) {
+    lightningEl.classList.add('flash-warning');
+    setTimeout(() => {
+      lightningEl.classList.remove('flash-warning');
+    }, 600);
+  }
+}
+
 function startVoiceRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
