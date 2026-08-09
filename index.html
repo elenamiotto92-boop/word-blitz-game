@@ -74,9 +74,10 @@
         </div>
       </div>
 
-      <section class="player-area">
+     <section class="player-area">
         <h3>LA TUA MANO</h3>
         <div id="player-hand" class="hand"></div>
+        
         <div class="input-wrapper">
           <input 
             type="text" 
@@ -90,10 +91,13 @@
           <div class="action-buttons">
             <button onclick="submitTypedWord()" class="btn-send">INVIA</button>
             <button id="btn-mic" onclick="startVoiceRecognition()" class="btn-mic" title="Voce">🎙️</button>
-            <button onclick="changeCategoryWithPenalty()" class="btn-change-cat">🔄 CAMBIA CATEGORIA (+1 CARTA)</button>
           </div>
           <div id="error-msg" class="error-msg"></div>
         </div>
+
+        <!-- 👇 Tasto spostato fuori! Ora è sempre visibile e ha la scritta giusta -->
+        <button onclick="changeCategoryWithPenalty()" class="btn-change-cat" style="width: 100%; margin-top: 10px;">🔄 CAMBIA CATEGORIA (+1 CARTA A TESTA)</button>
+        
       </section>
     </main>
   </div>
