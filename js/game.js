@@ -75,37 +75,6 @@ function startMultiplayerGame(initialCategory) {
   nextCategoryCard();
 }
 
-function drawHand() {
-  const hand = [];
-  if (!currentCategory && typeof pickRandomCategory === 'function') {
-    pickRandomCategory();
-  }
-
-  const letterCounts = {};
-  let hasCategoryRestriction = false;
-
-  if (typeof DICTIONARY !== 'undefined' && DICTIONARY[currentCategory]) {
-    hasCategoryRestriction = true;
-    DICTIONARY[currentCategory].forEach(word => {
-      const firstChar = word.charAt(0).toUpperCase();
-      letterCounts[firstChar] = (letterCounts[firstChar] || 0) + 1;
-    });
-  }
-
-  for (let i = 0; i < HAND_SIZE; i++) {
-    const validPool = LETTERS_POOL.filter(card => {
-      if (!hasCategoryRestriction) return true;
-      const maxAvailable = letterCounts[card.letter] || 0;
-      const alreadyInHand = hand.filter(c => c.letter === card.letter).length;
-      return alreadyInHand < maxAvailable;
-    });
-
-    const poolToUse = validPool.length > 0 ? validPool : LETTERS_POOL;
-    const randomCard = poolToUse[Math.floor(Math.random() * poolToUse.length)];
-    hand.push({ ...randomCard, id: Math.random() });
-  }
-  return hand;
-}
 
 function nextCategoryCard() {
   wordsPlayedOnCard = 0;
@@ -346,28 +315,75 @@ function submitTypedWord() {
   processPlayerWord(typedWord);
 }
 
+function drawHand() {
+  const hand = [];
+  if (!currentCategory && typeof pickRandomCategory === 'function') {
+    pickRandomCategory();
+  }
+
+  const letterCounts = {};
+  let hasCategoryRestriction = false;
+
+  // Controlla che la categoria esista e abbia parole all'interno
+  if (typeof DICTIONARY !== 'undefined' && Array.isArray(DICTIONARY[currentCategory]) && DICTIONARY[currentCategory].length > 0) {
+    hasCategoryRestriction = true;
+    DICTIONARY[currentCategory].forEach(word => {
+      const firstChar = word.charAt(0).toUpperCase();
+      letterCounts[firstChar] = (letterCounts[firstChar] || 0) + 1;
+    });
+  }
+
+  for (let i = 0; i < HAND_SIZE; i++) {
+    const validPool = LETTERS_POOL.filter(card => {
+      if (!hasCategoryRestriction) return true;
+      const maxAvailable = letterCounts[card.letter] || 0;
+      const alreadyInHand = hand.filter(c => c.letter === card.letter).length;
+      return alreadyInHand < maxAvailable;
+    });
+
+    const poolToUse = validPool.length > 0 ? validPool : LETTERS_POOL;
+    const randomCard = poolToUse[Math.floor(Math.random() * poolToUse.length)];
+    hand.push({ ...randomCard, id: Math.random() });
+  }
+  return hand;
+}
+
 function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnings = null) {
+  // Inizializza in sicurezza i fulmini del bot se non esistono
+  if (bot && typeof bot.lightnings !== 'number') {
+    bot.lightnings = 0;
+  }
+
+  let oldLightnings = playerLightnings;
+
   if (iClosedFirst) {
     if (!connection || !connection.open) {
-      if (bot && bot.hand) {
+      if (bot && Array.isArray(bot.hand)) {
         let botPenalties = 0;
-        bot.hand.forEach(c => botPenalties += c.lightnings);
+        bot.hand.forEach(c => {
+          if (c && typeof c.lightnings === 'number') botPenalties += c.lightnings;
+        });
         bot.lightnings += botPenalties;
       }
     }
   } else {
     let myPenalties = 0;
-    playerHand.forEach(c => myPenalties += c.lightnings);
+    if (Array.isArray(playerHand)) {
+      playerHand.forEach(c => {
+        if (c && typeof c.lightnings === 'number') myPenalties += c.lightnings;
+      });
+    }
     playerLightnings += myPenalties;
 
     if (incomingCategory) {
       currentCategory = incomingCategory;
     }
   }
-// 👇 Se i tuoi fulmini sono aumentati rispetto a prima, fai partire l'effetto scossa!
+
   if (playerLightnings > oldLightnings) {
     triggerPenaltyEffect();
   }
+
   if (incomingLightnings !== null && incomingLightnings !== undefined) {
     const botLightningsEl = document.getElementById('bot-lightnings');
     if (botLightningsEl) botLightningsEl.innerText = incomingLightnings;
@@ -378,14 +394,13 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
   
   const botLightningsEl = document.getElementById('bot-lightnings');
   if (botLightningsEl && bot) {
-    botLightningsEl.innerText = bot.lightnings || 0;
+    botLightningsEl.innerText = bot.lightnings;
   }
 
   if (typeof sendData === 'function' && connection && connection.open) {
     sendData({ type: 'UPDATE_LIGHTNINGS', lightnings: playerLightnings });
   }
 
- // Controlla se qualcuno ha perso (raggiunto o superato 40 fulmini)
   let opponentScore = bot ? bot.lightnings : (parseInt(document.getElementById('bot-lightnings')?.innerText) || 0);
 
   if (playerLightnings >= MAX_LIGHTNINGS) {
@@ -399,6 +414,7 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
   }
 
   alert("Nuova manche! Distribuite 7 nuove carte a tutti.");
+  
   playerHand = drawHand();
   if (!connection || !connection.open) {
     if (bot) bot.hand = drawHand();
@@ -406,7 +422,6 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
 
   nextCategoryCard();
 }
-
 function showGameOverModal(isVictory, message) {
   const modal = document.getElementById('game-over-modal');
   const title = document.getElementById('modal-title');
