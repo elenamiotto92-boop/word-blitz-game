@@ -14,10 +14,10 @@ let playerLightnings = 0;
 const bot = typeof BotPlayer !== 'undefined' ? new BotPlayer() : null;
 
 const LETTERS_POOL = [
-  { letter: 'A', lightnings: 1 }, { letter: 'B', lightnings: 2 }, { letter: 'C', lightnings: 1 }, { letter: 'D', lightnings: 2 },
+  { letter: 'A', lightnings: 2 }, { letter: 'B', lightnings: 2 }, { letter: 'C', lightnings: 1 }, { letter: 'D', lightnings: 2 },
   { letter: 'E', lightnings: 1 }, { letter: 'F', lightnings: 2 }, { letter: 'G', lightnings: 2 }, { letter: 'H', lightnings: 3 },
   { letter: 'I', lightnings: 1 }, { letter: 'J', lightnings: 3 }, { letter: 'K', lightnings: 3 }, { letter: 'L', lightnings: 1 },
-  { letter: 'M', lightnings: 1 }, { letter: 'N', lightnings: 1 }, { letter: 'O', lightnings: 1 }, { letter: 'P', lightnings: 1 },
+  { letter: 'M', lightnings: 2 }, { letter: 'N', lightnings: 1 }, { letter: 'O', lightnings: 1 }, { letter: 'P', lightnings: 1 },
   { letter: 'Q', lightnings: 3 }, { letter: 'R', lightnings: 1 }, { letter: 'S', lightnings: 1 }, { letter: 'T', lightnings: 1 },
   { letter: 'U', lightnings: 2 }, { letter: 'V', lightnings: 2 }, { letter: 'W', lightnings: 3 }, { letter: 'X', lightnings: 3 },
   { letter: 'Y', lightnings: 3 }, { letter: 'Z', lightnings: 3 }
