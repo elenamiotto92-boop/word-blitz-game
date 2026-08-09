@@ -332,7 +332,8 @@ function assignPenaltyCard(reasonText) {
   const penaltyCard = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
   playerHand.push({ ...penaltyCard, id: Math.random() });
   renderHand();
-  
+  // 👇 Attiva l'animazione di penalità
+  triggerPenaltyEffect();
   const errorMsg = document.getElementById('error-msg');
   if (errorMsg) errorMsg.innerText = `${reasonText} +1 carta!`;
 }
