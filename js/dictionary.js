@@ -408,7 +408,6 @@ const DICTIONARY = {
   ],
 };
 
- const DICTIONARY = {
   "CARTONI ANIMATI": [],
   "PAROLE CHE NON SI USANO SPESSO": [],
   "IN GIARDINO": [],
