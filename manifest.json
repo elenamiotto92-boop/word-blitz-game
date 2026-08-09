@@ -1,0 +1,16 @@
+{
+  "name": "Word Blitz",
+  "short_name": "WordBlitz",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f0ea",
+  "theme_color": "#9a3412",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
