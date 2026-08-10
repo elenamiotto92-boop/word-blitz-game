@@ -347,28 +347,25 @@ function drawHand() {
   }
   return hand;
 }
+
 function checkGameWinCondition() {
-  let opponentScore = 0;
+  let bScore = 0;
   
-  if (typeof bot !== 'undefined' && bot && typeof bot.lightnings === 'number') {
-    opponentScore = bot.lightnings;
-  } else {
-    const botEl = document.getElementById('bot-lightnings');
-    if (botEl) {
-      // Estrae il numero esatto anche se c'è del testo intorno (es. "Fulmini avversario: 43 / 40")
-      const match = botEl.innerText.match(/\d+/);
-      opponentScore = match ? parseInt(match[0], 10) : 0;
-    }
+  // Estraiamo il numero ESATTO direttamente dal testo che si vede sullo schermo
+  const botEl = document.getElementById('bot-lightnings');
+  if (botEl) {
+    const match = botEl.innerText.match(/\d+/);
+    bScore = match ? parseInt(match[0], 10) : 0;
   }
 
-  // Controllo Sconfitta (Tu arrivi a 40)
-  if (playerLightnings >= MAX_LIGHTNINGS) {
+  // Controllo Sconfitta (Tu arrivi a 40 o più)
+  if (playerLightnings >= 40) {
     showGameOverModal(false, "Hai raggiunto 40 fulmini... Peccato, ha vinto l'avversario!");
     return true;
   }
 
-  // Controllo Vittoria (L'avversario arriva a 40)
-  if (opponentScore >= MAX_LIGHTNINGS) {
+  // Controllo Vittoria (L'avversario arriva a 40 o più)
+  if (bScore >= 40) {
     showGameOverModal(true, "L'avversario ha raggiunto 40 fulmini! Complimenti, hai vinto la partita!");
     return true;
   }
@@ -377,7 +374,7 @@ function checkGameWinCondition() {
 }
 
 function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnings = null) {
-  if (bot && (typeof bot.lightnings !== 'number' || isNaN(bot.lightnings))) {
+  if (typeof bot !== 'undefined' && bot && (typeof bot.lightnings !== 'number' || isNaN(bot.lightnings))) {
     bot.lightnings = 0;
   }
 
@@ -385,7 +382,7 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
 
   if (iClosedFirst) {
     if (!connection || !connection.open) {
-      if (bot && Array.isArray(bot.hand)) {
+      if (typeof bot !== 'undefined' && bot && Array.isArray(bot.hand)) {
         let botPenalties = 0;
         bot.hand.forEach(c => {
           if (c && typeof c.lightnings === 'number') botPenalties += c.lightnings;
@@ -411,38 +408,38 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
     triggerPenaltyEffect();
   }
 
-  if (incomingLightnings !== null && incomingLightnings !== undefined) {
-    const botLightningsEl = document.getElementById('bot-lightnings');
-    if (botLightningsEl) botLightningsEl.innerText = incomingLightnings;
-  }
-
+  // AGGIORNAMENTO DOM (Scrive i punteggi sullo schermo)
   const playerLightningsEl = document.getElementById('player-lightnings');
   if (playerLightningsEl) playerLightningsEl.innerText = playerLightnings;
-  
+
   const botLightningsEl = document.getElementById('bot-lightnings');
-  if (botLightningsEl && bot) {
-    botLightningsEl.innerText = bot.lightnings;
+  if (botLightningsEl) {
+    if (incomingLightnings !== null && incomingLightnings !== undefined) {
+      botLightningsEl.innerText = incomingLightnings;
+    } else if (typeof bot !== 'undefined' && bot) {
+      botLightningsEl.innerText = bot.lightnings;
+    }
   }
 
   if (typeof sendData === 'function' && connection && connection.open) {
     sendData({ type: 'UPDATE_LIGHTNINGS', lightnings: playerLightnings });
   }
 
-  // 👇 VERIFICA IMMEDIATA DELLA VITTORIA / SCONFITTA
+  // 👇 CONTROLLO VITTORIA BLINDATO
+  // Ora scatta subito dopo aver aggiornato lo schermo e lo legge perfettamente
   if (checkGameWinCondition()) {
-    return; // Interrompe tutto e blocca la nuova manche se qualcuno è a 40+
+    return; // Se qualcuno ha vinto, blocca la manche e mostra il pop-up!
   }
 
   alert("Nuova manche! Distribuite 7 nuove carte a tutti.");
   
   playerHand = drawHand();
   if (!connection || !connection.open) {
-    if (bot) bot.hand = drawHand();
+    if (typeof bot !== 'undefined' && bot) bot.hand = drawHand();
   }
 
   nextCategoryCard();
 }
-
 function showGameOverModal(isVictory, message) {
   const modal = document.getElementById('game-over-modal');
   const title = document.getElementById('modal-title');
