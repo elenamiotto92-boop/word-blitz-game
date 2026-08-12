@@ -543,3 +543,32 @@ function pickRandomCategory() {
   // Rimuoviamo la categoria appena pescata così non potrà uscire di nuovo
   availableCategories.splice(randomIndex, 1);
 }
+
+// ==========================================
+// SISTEMA DI VITTORIA INFALLIBILE (IN TEMPO REALE)
+// ==========================================
+setInterval(() => {
+  // Evita che il messaggio appaia in loop se è già aperto
+  const modal = document.getElementById('game-over-modal');
+  if (modal && modal.style.display === 'flex') return;
+
+  // 1. Controlla te stesso
+  if (playerLightnings >= 40) {
+    showGameOverModal(false, "Hai raggiunto 40 fulmini... Peccato, ha vinto l'avversario!");
+    return;
+  }
+
+  // 2. Controlla l'avversario leggendo il numero direttamente dal tabellone visivo
+  const botEl = document.getElementById('bot-lightnings');
+  if (botEl) {
+    const numeriEstratti = botEl.innerText.match(/\d+/g); 
+    if (numeriEstratti) {
+      // Prende il primo numero che trova (es: dal testo "41 / 40" prende "41")
+      const punteggioAvversario = parseInt(numeriEstratti[0], 10);
+      
+      if (punteggioAvversario >= 40) {
+        showGameOverModal(true, "L'avversario ha raggiunto 40 fulmini! Complimenti, hai vinto la partita!");
+      }
+    }
+  }
+}, 500); // Fa un controllo ogni mezzo secondo
