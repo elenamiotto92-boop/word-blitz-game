@@ -166,7 +166,10 @@ function playCardLocal(cardIndex) {
   renderHand();
 
   lastPlayedWord = card.letter;
-  showCenterStage(card.letter, "Hai giocato la lettera: DICI LA PAROLA A VOCE!");
+  
+  // 👇 Qui abbiamo rimosso "DICI LA PAROLA A VOCE!"
+  showCenterStage(card.letter, "Hai giocato la lettera:"); 
+  
   lastPlayerId = "TU";
 
   if (typeof sendData === 'function' && connection && connection.open) {
@@ -184,6 +187,7 @@ function playCardLocal(cardIndex) {
     triggerRoundEnd(true);
   }
 }
+
 
 function processPlayerWord(typedWord) {
   const errorMsg = document.getElementById('error-msg');
