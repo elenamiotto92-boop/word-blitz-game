@@ -19,28 +19,32 @@ function createRoom() {
 
   peer.on('connection', (conn) => {
     connection = conn;
-    document.getElementById('connection-status').innerText = "Amico connesso! Avvio partita...";
     
-    if (typeof bot !== 'undefined') bot.stopThinking();
-
-    setTimeout(() => {
-      if (typeof DICTIONARY === 'undefined') {
-        alert("⚠️ ERRORE: Il file dictionary.js è rotto! Controlla le virgole.");
-        document.getElementById('connection-status').innerText = "Errore nel dizionario!";
-        return;
-      }
-
-      const categories = Object.keys(DICTIONARY);
-      currentCategory = categories[Math.floor(Math.random() * categories.length)];
+    // 👇 ORA ASPETTIAMO CHE IL CANALE SIA VERAMENTE APERTO PRIMA DI INIZIARE
+    connection.on('open', () => {
+      document.getElementById('connection-status').innerText = "Amico connesso! Avvio partita...";
       
-      startMultiplayerGame(currentCategory);
-      
-      sendData({ 
-        type: 'START_MULTIPLAYER', 
-        category: currentCategory,
-        mode: gameMode 
-      });
-    }, 800);
+      if (typeof bot !== 'undefined') bot.stopThinking();
+
+      setTimeout(() => {
+        if (typeof DICTIONARY === 'undefined') {
+          alert("⚠️ ERRORE: Il file dictionary.js è rotto! Controlla le virgole.");
+          document.getElementById('connection-status').innerText = "Errore nel dizionario!";
+          return;
+        }
+
+        const categories = Object.keys(DICTIONARY);
+        currentCategory = categories[Math.floor(Math.random() * categories.length)];
+        
+        startMultiplayerGame(currentCategory);
+        
+        sendData({ 
+          type: 'START_MULTIPLAYER', 
+          category: currentCategory,
+          mode: gameMode 
+        });
+      }, 800); // Questo ritardo ora serve solo per l'effetto visivo, la rete è già sicura!
+    });
   });
 }
 
