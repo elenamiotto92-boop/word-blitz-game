@@ -7,6 +7,8 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let gameChannel = null;
 let isHost = false;
+let connection = true; 
+let peer = true;
 
 function showMultiplayerSetup() {
   document.getElementById('multiplayer-setup').style.display = 'block';
