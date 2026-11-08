@@ -47,37 +47,36 @@ function createRoom() {
     if (statusEl) statusEl.innerText = `Stanza creata! Codice: ${id}. In attesa dell'amico...`;
   });
 
+  // 👇 METODO DI FORZATURA TOTALE: Appena l'amico bussa, sblocchiamo tutto
   peer.on('connection', (conn) => {
     connection = conn;
-    if (statusEl) statusEl.innerText = "L'amico si è collegato! Avvio in corso...";
+    if (statusEl) statusEl.innerText = "🎉 Connessione stabilita! Entrambi dentro.";
     
     if (typeof bot !== 'undefined') bot.stopThinking();
+
+    // Sblocca subito la grafica nascondendo il setup
+    const setupEl = document.getElementById('multiplayer-setup');
+    if (setupEl) setupEl.style.display = 'none';
 
     dataListenerAttached = false; 
     setupDataListener();
 
-    connection.on('open', () => {
-      if (statusEl) statusEl.innerText = "Porta aperta! Entrambi dentro.";
+    // Avvia immediatamente la partita per l'Host e manda il segnale
+    if (typeof DICTIONARY !== 'undefined') {
+      const categories = Object.keys(DICTIONARY);
+      currentCategory = categories[Math.floor(Math.random() * categories.length)];
       
-      // 👇 IL FORZATORE FINALE DELLA GRAFICA
-      const setupEl = document.getElementById('multiplayer-setup');
-      if (setupEl) setupEl.style.display = 'none';
-
-      if (typeof DICTIONARY !== 'undefined') {
-        const categories = Object.keys(DICTIONARY);
-        currentCategory = categories[Math.floor(Math.random() * categories.length)];
-        
-        startMultiplayerGame(currentCategory);
-        
-        setTimeout(() => {
-          sendData({ 
-            type: 'START_MULTIPLAYER', 
-            category: currentCategory,
-            mode: gameMode 
-          });
-        }, 300);
-      }
-    });
+      startMultiplayerGame(currentCategory);
+      
+      // Piccolo timer di cortesia per assicurarci che il canale dati sia pronto a ricevere
+      setTimeout(() => {
+        sendData({ 
+          type: 'START_MULTIPLAYER', 
+          category: currentCategory,
+          mode: gameMode 
+        });
+      }, 500);
+    }
   });
 }
 
