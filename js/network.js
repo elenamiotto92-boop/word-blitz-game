@@ -7,6 +7,16 @@ function showMultiplayerSetup() {
   document.getElementById('multiplayer-setup').style.display = 'block';
 }
 
+// CONFIGURAZIONE DI RETE ANTI-FIREWALL
+const peerConfig = {
+  config: {
+    'iceServers': [
+      { url: 'stun:stun.l.google.com:19302' },
+      { url: 'stun:stun1.l.google.com:19302' }
+    ]
+  }
+};
+
 function createRoom() {
   isHost = true;
   let customId = document.getElementById('room-code-input').value.trim();
@@ -18,7 +28,8 @@ function createRoom() {
   const statusEl = document.getElementById('connection-status');
   if (statusEl) statusEl.innerText = "Creazione stanza in corso...";
 
-  peer = new Peer(customId);
+  // 👇 L'Host usa il server Google per scavalcare il router
+  peer = new Peer(customId, peerConfig);
 
   peer.on('error', (err) => {
     alert("Errore di rete (Host): " + err.type);
@@ -35,11 +46,8 @@ function createRoom() {
     
     if (typeof bot !== 'undefined') bot.stopThinking();
 
-    // 👇 LA CORREZIONE È QUI: L'Host aspetta che la connessione sia 100% aperta!
     conn.on('open', () => {
       if (statusEl) statusEl.innerText = "Porta aperta! Ascolto l'amico...";
-      
-      // Sblocchiamo la ricezione dati in caso abbiate fatto tentativi precedenti
       dataListenerAttached = false; 
       setupDataListener();
     });
@@ -54,7 +62,8 @@ function joinRoom() {
   const statusEl = document.getElementById('connection-status');
   if (statusEl) statusEl.innerText = "1. Contatto il server centrale..."; 
 
-  peer = new Peer();
+  // 👇 Il Guest usa lo stesso server per trovare la strada
+  peer = new Peer(peerConfig);
 
   peer.on('error', (err) => {
     alert("Errore di rete (Guest): " + err.type);
@@ -70,11 +79,9 @@ function joinRoom() {
       if (statusEl) statusEl.innerText = `3. Agganciato! Sincronizzazione...`;
       if (typeof bot !== 'undefined') bot.stopThinking();
       
-      // Sblocchiamo la ricezione dati anche per il Guest
       dataListenerAttached = false;
       setupDataListener();
       
-      // Il Guest aspetta un pizzico in più (800ms) per essere sicuro che l'Host sia pronto ad ascoltare
       setTimeout(() => {
          if (statusEl) statusEl.innerText = `4. Invio segnale di via libera!`;
          if (connection) {
