@@ -7,41 +7,20 @@ function showMultiplayerSetup() {
   document.getElementById('multiplayer-setup').style.display = 'block';
 }
 
-// ======================================================
-// CONFIGURAZIONE DI RETE: BATTERIA TURN COMPLETA 
-// ======================================================
 const peerConfig = {
-  debug: 3, // Alzato a 3 per avere più dettagli in caso di errori futuri
+  debug: 3,
   config: {
     'iceServers': [
-      // 1. STUN Google di base
-      { urls: 'stun:stun.l.google.com:19302' },
+      // 1. STUN proprietario di Metered (Obbligatorio per sbloccare il TURN)
+      { urls: 'stun:wordblitz.metered.live:80' },
       
-      // 2. TURN su porta 80 (Standard)
-      { 
-        urls: 'turn:wordblitz.metered.live:80', 
-        username: 'd320ebb9b0b435f7d7013b1e', 
-        credential: 'ivPnAkRKyLfsRRVw' 
-      },
-      
-      // 3. TURN su porta 443 (Sicuro UDP)
-      { 
-        urls: 'turn:wordblitz.metered.live:443', 
-        username: 'd320ebb9b0b435f7d7013b1e', 
-        credential: 'ivPnAkRKyLfsRRVw' 
-      },
-      
-      // 4. TURN su porta 443 TCP (Anti-CGNAT Estremo)
-      { 
-        urls: 'turn:wordblitz.metered.live:443?transport=tcp', 
-        username: 'd320ebb9b0b435f7d7013b1e', 
-        credential: 'ivPnAkRKyLfsRRVw' 
-      }
+      // 2. I tre tunnel TURN (UDP e TCP)
+      { urls: 'turn:wordblitz.metered.live:80', username: 'd320ebb9b0b435f7d7013b1e', credential: 'ivPnAkRKyLfsRRVw' },
+      { urls: 'turn:wordblitz.metered.live:443', username: 'd320ebb9b0b435f7d7013b1e', credential: 'ivPnAkRKyLfsRRVw' },
+      { urls: 'turn:wordblitz.metered.live:443?transport=tcp', username: 'd320ebb9b0b435f7d7013b1e', credential: 'ivPnAkRKyLfsRRVw' }
     ]
-    // Ho rimosso 'iceTransportPolicy': 'relay' per lasciare il browser libero di negoziare
   }
 };
-
 function createRoom() {
   isHost = true;
   let customId = document.getElementById('room-code-input').value.trim();
