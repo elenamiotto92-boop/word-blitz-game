@@ -63,39 +63,49 @@ function setupSupabaseListener() {
     const data = payload.payload;
     const statusEl = document.getElementById('connection-status');
 
-  if (data.type === 'GUEST_READY' && isHost) {
+    if (data.type === 'GUEST_READY' && isHost) {
       if (statusEl) statusEl.innerText = "L'amico è entrato! Avvio in corso...";
-      const setupEl = document.getElementById('multiplayer-setup');
-      if (setupEl) setupEl.style.display = 'none';
-
+      
       if (typeof DICTIONARY === 'undefined') {
         alert("⚠️ ERRORE: Il file dictionary.js è rotto!");
         return;
       }
       
       const categories = Object.keys(DICTIONARY);
-      currentCategory = categories[Math.floor(Math.random() * categories.length)];
+      const chosenCategory = categories[Math.floor(Math.random() * categories.length)];
       
-      startMultiplayerGame(currentCategory);
+      // 1. SPEDIAMO IL SEGNALE AL TELEFONO SUBITO, a mente sgombra
+      sendData({ 
+        type: 'START_MULTIPLAYER', 
+        category: chosenCategory,
+        mode: typeof gameMode !== 'undefined' ? gameMode : 'LONTANI'
+      });
       
-      // 🔑 IL TRUCCO: Diamo al telefono mezzo secondo per mettersi in ascolto della risposta
+      // 2. Facciamo aspettare il PC 300 millisecondi per essere certi che il messaggio sia partito, poi avvia
       setTimeout(() => {
-        sendData({ 
-          type: 'START_MULTIPLAYER', 
-          category: currentCategory,
-          mode: gameMode 
-        });
-      }, 500);
+        const setupEl = document.getElementById('multiplayer-setup');
+        if (setupEl) setupEl.style.display = 'none';
+        
+        window.currentCategory = chosenCategory;
+        startMultiplayerGame(chosenCategory);
+      }, 300);
     }
-    
+
     if (data.type === 'START_MULTIPLAYER') {
+      // Ricevuto dal telefono! Sblocchiamo tutto in sicurezza
       if (data.mode) {
-        gameMode = data.mode;
+        window.gameMode = data.mode;
       }
+      window.currentCategory = data.category;
+      
       const setupEl = document.getElementById('multiplayer-setup');
       if (setupEl) setupEl.style.display = 'none';
 
-      startMultiplayerGame(data.category);
+      try {
+        startMultiplayerGame(data.category);
+      } catch (err) {
+        alert("Errore caricamento grafica telefono: " + err);
+      }
     }
 
     if (data.type === 'PLAY_CARD_STAGE') {
@@ -126,10 +136,10 @@ function setupSupabaseListener() {
     }
 
     if (data.type === 'CHANGE_CATEGORY_ONLY') {
-      currentCategory = data.category;
+      window.currentCategory = data.category;
       wordsPlayedOnCard = 0;
       const catEl = document.getElementById('current-category');
-      if (catEl) catEl.innerText = currentCategory;
+      if (catEl) catEl.innerText = window.currentCategory;
       const playedEl = document.getElementById('played-words');
       if (playedEl) playedEl.innerHTML = "";
       const countEl = document.getElementById('words-count');
@@ -147,10 +157,10 @@ function setupSupabaseListener() {
     }
 
     if (data.type === 'CHANGE_CATEGORY') {
-      currentCategory = data.category;
+      window.currentCategory = data.category;
       wordsPlayedOnCard = 0;
       const catEl = document.getElementById('current-category');
-      if (catEl) catEl.innerText = currentCategory;
+      if (catEl) catEl.innerText = window.currentCategory;
       const playedEl = document.getElementById('played-words');
       if (playedEl) playedEl.innerHTML = "";
       const countEl = document.getElementById('words-count');
@@ -171,7 +181,6 @@ function setupSupabaseListener() {
     }
   });
 }
-
 function sendData(payload) {
   if (gameChannel) {
     gameChannel.send({
