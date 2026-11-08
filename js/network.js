@@ -7,13 +7,23 @@ function showMultiplayerSetup() {
   document.getElementById('multiplayer-setup').style.display = 'block';
 }
 
-// CONFIGURAZIONE DI RETE ANTI-FIREWALL
+// ======================================================
+// CONFIGURAZIONE DI RETE: TUNNEL PRIVATO FORZATO (Anti-CGNAT)
+// ======================================================
 const peerConfig = {
+  debug: 2,
   config: {
     'iceServers': [
-      { url: 'stun:stun.l.google.com:19302' },
-      { url: 'stun:stun1.l.google.com:19302' }
-    ]
+      { urls: 'stun:stun.l.google.com:19302' }, // Scorta Google
+      { 
+        urls: 'turn:wordblitz.metered.live:443?transport=tcp', 
+        username: 'd320ebb9b0b435f7d7013b1e', 
+        credential: 'ivPnAkRKyLfsRRVw' 
+      }
+    ],
+    // 👇 IL TRUCCO FINALE: Forza il browser a usare SOLO il tuo server privato.
+    // Ignora le reti locali e bypassa istantaneamente i blocchi di Iliad/Vodafone/Fastweb!
+    'iceTransportPolicy': 'relay'
   }
 };
 
@@ -28,7 +38,6 @@ function createRoom() {
   const statusEl = document.getElementById('connection-status');
   if (statusEl) statusEl.innerText = "Creazione stanza in corso...";
 
-  // 👇 L'Host usa il server Google per scavalcare il router
   peer = new Peer(customId, peerConfig);
 
   peer.on('error', (err) => {
@@ -42,14 +51,15 @@ function createRoom() {
 
   peer.on('connection', (conn) => {
     connection = conn;
-    if (statusEl) statusEl.innerText = "L'amico ha bussato! Sto aprendo la porta...";
+    if (statusEl) statusEl.innerText = "L'amico ha bussato! Scambio le chiavi di sicurezza...";
     
     if (typeof bot !== 'undefined') bot.stopThinking();
 
+    dataListenerAttached = false; 
+    setupDataListener();
+
     conn.on('open', () => {
       if (statusEl) statusEl.innerText = "Porta aperta! Ascolto l'amico...";
-      dataListenerAttached = false; 
-      setupDataListener();
     });
   });
 }
@@ -62,7 +72,6 @@ function joinRoom() {
   const statusEl = document.getElementById('connection-status');
   if (statusEl) statusEl.innerText = "1. Contatto il server centrale..."; 
 
-  // 👇 Il Guest usa lo stesso server per trovare la strada
   peer = new Peer(peerConfig);
 
   peer.on('error', (err) => {
@@ -73,10 +82,11 @@ function joinRoom() {
   peer.on('open', () => {
     if (statusEl) statusEl.innerText = `2. Server raggiunto! Cerco la stanza...`;
     
-    connection = peer.connect(targetId, { reliable: true }); 
+    // Connessione standard
+    connection = peer.connect(targetId); 
     
     connection.on('open', () => {
-      if (statusEl) statusEl.innerText = `3. Agganciato! Sincronizzazione...`;
+      if (statusEl) statusEl.innerText = `3. Agganciato! Sincronizzazione in corso...`;
       if (typeof bot !== 'undefined') bot.stopThinking();
       
       dataListenerAttached = false;
@@ -91,7 +101,6 @@ function joinRoom() {
     });
   });
 }
-
 function setupDataListener() {
   if (!connection || dataListenerAttached) return;
   dataListenerAttached = true;
