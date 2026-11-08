@@ -158,10 +158,10 @@ function setupSupabaseListener() {
       renderHand();
     }
 
-  if (data.type === 'ROUND_OVER') {
+    if (data.type === 'ROUND_OVER') {
       alert("L'avversario ha svuotato la mano per primo! Conteggio fulmini.");
       
-      // Aggiorna subito i fulmini dell'avversario a schermo (tu ricevi i suoi fulmini)
+      // Aggiorna subito i fulmini dell'avversario a schermo
       const botLightningsEl = document.getElementById('bot-lightnings');
       if (botLightningsEl && typeof data.lightnings !== 'undefined') {
         botLightningsEl.innerText = data.lightnings;
@@ -169,6 +169,7 @@ function setupSupabaseListener() {
 
       triggerRoundEnd(false, data.category, data.lightnings);
     }
+
     if (data.type === 'CHANGE_CATEGORY') {
       window.currentCategory = data.category;
       wordsPlayedOnCard = 0;
@@ -188,12 +189,13 @@ function setupSupabaseListener() {
 
     if (data.type === 'UPDATE_LIGHTNINGS') {
       const botLightningsEl = document.getElementById('bot-lightnings');
-      if (botLightningsEl) {
+      if (botLightningsEl && typeof data.lightnings !== 'undefined') {
         botLightningsEl.innerText = data.lightnings;
       }
     }
   });
 }
+    
 function sendData(payload) {
   if (gameChannel) {
     gameChannel.send({
