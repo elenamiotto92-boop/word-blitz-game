@@ -7,6 +7,9 @@ function showMultiplayerSetup() {
   document.getElementById('multiplayer-setup').style.display = 'block';
 }
 
+// ======================================================
+// CONFIGURAZIONE DI RETE: BATTERIA TURN COMPLETA 
+// ======================================================
 const peerConfig = {
   debug: 3,
   config: {
@@ -21,6 +24,7 @@ const peerConfig = {
     ]
   }
 };
+
 function createRoom() {
   isHost = true;
   let customId = document.getElementById('room-code-input').value.trim();
@@ -53,7 +57,17 @@ function createRoom() {
     setupDataListener();
 
     conn.on('open', () => {
-      if (statusEl) statusEl.innerText = "Porta aperta! Ascolto l'amico...";
+      if (statusEl) statusEl.innerText = "Porta aperta! Entrambi dentro.";
+      
+      // Forza l'avvio immediato per l'Host se il canale è aperto
+      if (isHost) {
+        setTimeout(() => {
+          const categories = Object.keys(DICTIONARY);
+          currentCategory = categories[Math.floor(Math.random() * categories.length)];
+          startMultiplayerGame(currentCategory);
+          sendData({ type: 'START_MULTIPLAYER', category: currentCategory, mode: gameMode });
+        }, 500);
+      }
     });
   });
 }
@@ -95,6 +109,7 @@ function joinRoom() {
     });
   });
 }
+
 function setupDataListener() {
   if (!connection || dataListenerAttached) return;
   dataListenerAttached = true;
@@ -102,8 +117,6 @@ function setupDataListener() {
   // Tutto quello che riceviamo dalla rete passa da qui dentro:
   connection.on('data', (data) => {
     
-    // 👇 ORA È NEL POSTO GIUSTO!
-    // L'host riceve l'ok dell'amica e fa partire la partita per entrambi!
     if (data.type === 'GUEST_READY' && isHost) {
       if (typeof DICTIONARY === 'undefined') {
         alert("⚠️ ERRORE: Il file dictionary.js è rotto! Controlla le virgole.");
