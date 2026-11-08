@@ -47,36 +47,40 @@ function createRoom() {
     if (statusEl) statusEl.innerText = `Stanza creata! Codice: ${id}. In attesa dell'amico...`;
   });
 
-  // 👇 METODO DI FORZATURA TOTALE: Appena l'amico bussa, sblocchiamo tutto
   peer.on('connection', (conn) => {
     connection = conn;
-    if (statusEl) statusEl.innerText = "🎉 Connessione stabilita! Entrambi dentro.";
+    if (statusEl) statusEl.innerText = "L'amico si è collegato! Sincronizzazione in corso...";
     
     if (typeof bot !== 'undefined') bot.stopThinking();
-
-    // Sblocca subito la grafica nascondendo il setup
-    const setupEl = document.getElementById('multiplayer-setup');
-    if (setupEl) setupEl.style.display = 'none';
 
     dataListenerAttached = false; 
     setupDataListener();
 
-    // Avvia immediatamente la partita per l'Host e manda il segnale
-    if (typeof DICTIONARY !== 'undefined') {
-      const categories = Object.keys(DICTIONARY);
-      currentCategory = categories[Math.floor(Math.random() * categories.length)];
+    // 🔑 LA SVOLTA DEFINITIVA: Aspettiamo l'evento nativo 'open' del canale dati effettivo
+    connection.on('open', () => {
+      if (statusEl) statusEl.innerText = "Porta aperta! Partita avviata!";
       
-      startMultiplayerGame(currentCategory);
-      
-      // Piccolo timer di cortesia per assicurarci che il canale dati sia pronto a ricevere
-      setTimeout(() => {
-        sendData({ 
+      // 1. Sblocca la grafica dell'Host
+      const setupEl = document.getElementById('multiplayer-setup');
+      if (setupEl) setupEl.style.display = 'none';
+
+      // 2. Avvia la partita localmente
+      if (typeof DICTIONARY !== 'undefined') {
+        const categories = Object.keys(DICTIONARY);
+        currentCategory = categories[Math.floor(Math.random() * categories.length)];
+        
+        startMultiplayerGame(currentCategory);
+        
+        // 3. Spedisce il pacchetto SOLO ORA che il canale dati è certificato come APERTO
+        connection.send({ 
           type: 'START_MULTIPLAYER', 
           category: currentCategory,
           mode: gameMode 
         });
-      }, 500);
-    }
+      } else {
+        alert("⚠️ ERRORE: Il dizionario non è caricato.");
+      }
+    });
   });
 }
 
@@ -101,7 +105,7 @@ function joinRoom() {
     connection = peer.connect(targetId); 
     
     connection.on('open', () => {
-      if (statusEl) statusEl.innerText = `3. Aggancio riuscito! Sincronizzazione...`;
+      if (statusEl) statusEl.innerText = `3. Aggancio riuscito! Attendo i dati dall'Host...`;
       if (typeof bot !== 'undefined') bot.stopThinking();
       
       dataListenerAttached = false;
