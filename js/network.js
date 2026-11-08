@@ -49,7 +49,7 @@ function createRoom() {
 
   peer.on('connection', (conn) => {
     connection = conn;
-    if (statusEl) statusEl.innerText = "L'amico ha bussato! Scambio le chiavi di sicurezza...";
+    if (statusEl) statusEl.innerText = "Porta aperta! Entrambi dentro.";
     
     if (typeof bot !== 'undefined') bot.stopThinking();
 
@@ -59,8 +59,8 @@ function createRoom() {
     conn.on('open', () => {
       if (statusEl) statusEl.innerText = "Porta aperta! Entrambi dentro.";
       
-      // Forza l'avvio immediato per l'Host se il canale è aperto
-      if (isHost) {
+      // Sblocca subito la schermata di gioco e fa partire la categoria per entrambi
+      if (isHost && typeof DICTIONARY !== 'undefined') {
         setTimeout(() => {
           const categories = Object.keys(DICTIONARY);
           currentCategory = categories[Math.floor(Math.random() * categories.length)];
