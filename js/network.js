@@ -47,18 +47,18 @@ function createRoom() {
     if (statusEl) statusEl.innerText = `Stanza creata! Codice: ${id}. In attesa dell'amico...`;
   });
 
-  // 🔑 SOLUZIONE DEFINITIVA HOST: Gestione diretta e immediata sull'evento di connessione
+  // 🔑 FORZATURA TOTALE: Appena l'amico bussa, diamo un micro-tempo al canale TURN e avviamo
   peer.on('connection', (conn) => {
     connection = conn;
-    if (statusEl) statusEl.innerText = "L'amico si è collegato! Avvio in corso...";
+    if (statusEl) statusEl.innerText = "🎉 Connessione stabilita! Partenza in corso...";
     
     if (typeof bot !== 'undefined') bot.stopThinking();
 
     dataListenerAttached = false; 
     setupDataListener();
 
-    // Funzione interna sicura per avviare la partita
-    const triggerStart = () => {
+    // Sblocca subito la grafica e fa partire il gioco senza aspettare eventi bloccati
+    setTimeout(() => {
       const setupEl = document.getElementById('multiplayer-setup');
       if (setupEl) setupEl.style.display = 'none';
 
@@ -68,26 +68,18 @@ function createRoom() {
         
         startMultiplayerGame(currentCategory);
         
-        // Invia i dati all'ospite
-        setTimeout(() => {
-          sendData({ 
-            type: 'START_MULTIPLAYER', 
-            category: currentCategory,
-            mode: gameMode 
-          });
-        }, 200);
+        // Invia il segnale all'ospite
+        sendData({ 
+          type: 'START_MULTIPLAYER', 
+          category: currentCategory,
+          mode: gameMode 
+        });
+      } else {
+        alert("⚠️ ERRORE: Il dizionario non è caricato.");
       }
-    };
-
-    // Se la connessione è già aperta la usiamo subito, altrimenti agganciamo l'open
-    if (connection.open) {
-      triggerStart();
-    } else {
-      connection.on('open', triggerStart);
-    }
+    }, 400); // 400 millisecondi di respiro per stabilizzare i pacchetti TURN
   });
 }
-
 function joinRoom() {
   isHost = false;
   const targetId = document.getElementById('room-code-input').value.trim();
