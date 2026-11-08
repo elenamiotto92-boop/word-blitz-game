@@ -47,17 +47,19 @@ function createRoom() {
     if (statusEl) statusEl.innerText = `Stanza creata! Codice: ${id}. In attesa dell'amico...`;
   });
 
-  // METODO CORRETTO DI PEERJS: L'ascoltatore va direttamente sull'istanza peer
   peer.on('connection', (conn) => {
     connection = conn;
-    if (statusEl) statusEl.innerText = "L'amico si è collegato! Apertura porta...";
+    if (statusEl) statusEl.innerText = "L'amico si è collegato! Avvio in corso...";
     
     if (typeof bot !== 'undefined') bot.stopThinking();
 
+    dataListenerAttached = false; 
+    setupDataListener();
+
     connection.on('open', () => {
-      if (statusEl) statusEl.innerText = "Porta aperta! Partita avviata!";
+      if (statusEl) statusEl.innerText = "Porta aperta! Entrambi dentro.";
       
-      // Sblocca subito la schermata nascondendo il setup e avviando il gioco
+      // 👇 IL FORZATORE FINALE DELLA GRAFICA
       const setupEl = document.getElementById('multiplayer-setup');
       if (setupEl) setupEl.style.display = 'none';
 
@@ -76,9 +78,6 @@ function createRoom() {
         }, 300);
       }
     });
-
-    dataListenerAttached = false; 
-    setupDataListener();
   });
 }
 
@@ -111,6 +110,7 @@ function joinRoom() {
     });
   });
 }
+
 function setupDataListener() {
   if (!connection || dataListenerAttached) return;
   dataListenerAttached = true;
