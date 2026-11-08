@@ -19,32 +19,12 @@ function createRoom() {
 
   peer.on('connection', (conn) => {
     connection = conn;
+    document.getElementById('connection-status').innerText = "Amico in connessione... (attendiamo che sia pronto)";
     
-    // 👇 ORA ASPETTIAMO CHE IL CANALE SIA VERAMENTE APERTO PRIMA DI INIZIARE
-    connection.on('open', () => {
-      document.getElementById('connection-status').innerText = "Amico connesso! Avvio partita...";
-      
-      if (typeof bot !== 'undefined') bot.stopThinking();
+    if (typeof bot !== 'undefined') bot.stopThinking();
 
-      setTimeout(() => {
-        if (typeof DICTIONARY === 'undefined') {
-          alert("⚠️ ERRORE: Il file dictionary.js è rotto! Controlla le virgole.");
-          document.getElementById('connection-status').innerText = "Errore nel dizionario!";
-          return;
-        }
-
-        const categories = Object.keys(DICTIONARY);
-        currentCategory = categories[Math.floor(Math.random() * categories.length)];
-        
-        startMultiplayerGame(currentCategory);
-        
-        sendData({ 
-          type: 'START_MULTIPLAYER', 
-          category: currentCategory,
-          mode: gameMode 
-        });
-      }, 800); // Questo ritardo ora serve solo per l'effetto visivo, la rete è già sicura!
-    });
+    // L'Host si mette subito in ascolto
+    setupDataListener();
   });
 }
 
@@ -59,10 +39,15 @@ function joinRoom() {
     connection = peer.connect(targetId);
     
     connection.on('open', () => {
-      document.getElementById('connection-status').innerText = `Connesso alla stanza! Sincronizzazione in corso...`;
+      document.getElementById('connection-status').innerText = `Connesso! Sincronizzazione in corso...`;
       if (typeof bot !== 'undefined') bot.stopThinking();
       
       setupDataListener();
+      
+      // Il Guest avvisa l'Host che è pronto a ricevere i dati!
+      setTimeout(() => {
+         sendData({ type: 'GUEST_READY' });
+      }, 500); 
     });
   });
 }
@@ -70,7 +55,24 @@ function joinRoom() {
 function setupDataListener() {
   if (!connection || dataListenerAttached) return;
   dataListenerAttached = true;
-
+// 👇 L'host riceve l'ok dell'amica e fa partire la partita per entrambi!
+    if (data.type === 'GUEST_READY' && isHost) {
+      if (typeof DICTIONARY === 'undefined') {
+        alert("⚠️ ERRORE: Il file dictionary.js è rotto! Controlla le virgole.");
+        return;
+      }
+      
+      const categories = Object.keys(DICTIONARY);
+      currentCategory = categories[Math.floor(Math.random() * categories.length)];
+      
+      startMultiplayerGame(currentCategory);
+      
+      sendData({ 
+        type: 'START_MULTIPLAYER', 
+        category: currentCategory,
+        mode: gameMode 
+      });
+    }
   connection.on('data', (data) => {
     if (data.type === 'START_MULTIPLAYER') {
       if (data.mode) {
