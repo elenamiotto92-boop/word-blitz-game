@@ -11,19 +11,27 @@ function createRoom() {
   isHost = true;
   const shortId = "room-" + Math.floor(1000 + Math.random() * 9000);
   
+  const statusEl = document.getElementById('connection-status');
+  if (statusEl) statusEl.innerText = "Creazione stanza in corso (connessione al server)...";
+
   peer = new Peer(shortId);
 
+  peer.on('error', (err) => {
+    alert("Errore di rete (Host): " + err.type);
+    if (statusEl) statusEl.innerText = "Errore: " + err.type;
+  });
+
   peer.on('open', (id) => {
-    document.getElementById('connection-status').innerText = `Stanza creata! Codice: ${id}. In attesa dell'amico...`;
+    if (statusEl) statusEl.innerText = `Stanza creata! Codice: ${id}. In attesa dell'amico...`;
   });
 
   peer.on('connection', (conn) => {
     connection = conn;
-    document.getElementById('connection-status').innerText = "Amico in connessione... (attendiamo che sia pronto)";
+    if (statusEl) statusEl.innerText = "Un amico sta provando a connettersi...";
     
     if (typeof bot !== 'undefined') bot.stopThinking();
 
-    // L'Host si mette subito in ascolto
+    // L'Host si mette in ascolto
     setupDataListener();
   });
 }
@@ -33,20 +41,35 @@ function joinRoom() {
   const targetId = document.getElementById('room-code-input').value.trim();
   if (!targetId) return alert("Inserisci un codice stanza!");
 
+  const statusEl = document.getElementById('connection-status');
+  // 👇 FEEDBACK IMMEDIATO appena si preme il tasto!
+  if (statusEl) statusEl.innerText = "1. Contatto il server centrale..."; 
+
   peer = new Peer();
 
+  peer.on('error', (err) => {
+    alert("Errore di rete (Guest): " + err.type);
+    if (statusEl) statusEl.innerText = "Errore: " + err.type;
+  });
+
   peer.on('open', () => {
-    connection = peer.connect(targetId);
+    if (statusEl) statusEl.innerText = `2. Server raggiunto! Cerco la stanza ${targetId}...`;
+    
+    // reliable: true aiuta a non perdere i pacchetti per strada
+    connection = peer.connect(targetId, { reliable: true }); 
     
     connection.on('open', () => {
-      document.getElementById('connection-status').innerText = `Connesso! Sincronizzazione in corso...`;
+      if (statusEl) statusEl.innerText = `3. Agganciato all'amico! Sincronizzazione...`;
       if (typeof bot !== 'undefined') bot.stopThinking();
       
       setupDataListener();
       
-      // Il Guest avvisa l'Host che è pronto a ricevere i dati!
+      // Il Guest avvisa l'Host
       setTimeout(() => {
-         sendData({ type: 'GUEST_READY' });
+         if (statusEl) statusEl.innerText = `4. Invio segnale di OK all'amico...`;
+         if (connection) {
+           connection.send({ type: 'GUEST_READY' });
+         }
       }, 500); 
     });
   });
@@ -162,7 +185,7 @@ function setupDataListener() {
 }
 
 function sendData(payload) {
-  if (connection && connection.open) {
+  if (connection) {
     connection.send(payload);
   }
 }
