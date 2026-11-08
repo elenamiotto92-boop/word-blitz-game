@@ -1,7 +1,9 @@
-// Inizializza Supabase 
+// Inizializza Supabase (inserisci i tuoi dati reali qui)
 const supabaseUrl = 'https://itjgnwldswolupeekmzq.supabase.co/rest/v1/';
 const supabaseKey = 'sb_publishable__XpUuZxIvIlEYjn5hrE1ww_g0lcJcIt';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+// CAMBIATO NOME QUI PER EVITARE CONFLITTI:
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let gameChannel = null;
 let isHost = false;
@@ -21,8 +23,8 @@ function createRoom() {
   const statusEl = document.getElementById('connection-status');
   if (statusEl) statusEl.innerText = "Creazione stanza sul server...";
 
-  // Crea il canale WebSocket con Supabase
-  gameChannel = supabase.channel(`room-${customId}`);
+  // Usa supabaseClient invece di supabase
+  gameChannel = supabaseClient.channel(`room-${customId}`);
   setupSupabaseListener();
 
   gameChannel.subscribe((status) => {
@@ -40,8 +42,8 @@ function joinRoom() {
   const statusEl = document.getElementById('connection-status');
   if (statusEl) statusEl.innerText = "Connessione al server di gioco..."; 
 
-  // Si aggancia allo stesso canale creato dall'Host
-  gameChannel = supabase.channel(`room-${targetId}`);
+  // Usa supabaseClient invece di supabase
+  gameChannel = supabaseClient.channel(`room-${targetId}`);
   setupSupabaseListener();
 
   gameChannel.subscribe((status) => {
