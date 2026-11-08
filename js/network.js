@@ -47,40 +47,44 @@ function createRoom() {
     if (statusEl) statusEl.innerText = `Stanza creata! Codice: ${id}. In attesa dell'amico...`;
   });
 
+  // 🔑 SOLUZIONE DEFINITIVA HOST: Gestione diretta e immediata sull'evento di connessione
   peer.on('connection', (conn) => {
     connection = conn;
-    if (statusEl) statusEl.innerText = "L'amico si è collegato! Sincronizzazione in corso...";
+    if (statusEl) statusEl.innerText = "L'amico si è collegato! Avvio in corso...";
     
     if (typeof bot !== 'undefined') bot.stopThinking();
 
     dataListenerAttached = false; 
     setupDataListener();
 
-    // 🔑 LA SVOLTA DEFINITIVA: Aspettiamo l'evento nativo 'open' del canale dati effettivo
-    connection.on('open', () => {
-      if (statusEl) statusEl.innerText = "Porta aperta! Partita avviata!";
-      
-      // 1. Sblocca la grafica dell'Host
+    // Funzione interna sicura per avviare la partita
+    const triggerStart = () => {
       const setupEl = document.getElementById('multiplayer-setup');
       if (setupEl) setupEl.style.display = 'none';
 
-      // 2. Avvia la partita localmente
       if (typeof DICTIONARY !== 'undefined') {
         const categories = Object.keys(DICTIONARY);
         currentCategory = categories[Math.floor(Math.random() * categories.length)];
         
         startMultiplayerGame(currentCategory);
         
-        // 3. Spedisce il pacchetto SOLO ORA che il canale dati è certificato come APERTO
-        connection.send({ 
-          type: 'START_MULTIPLAYER', 
-          category: currentCategory,
-          mode: gameMode 
-        });
-      } else {
-        alert("⚠️ ERRORE: Il dizionario non è caricato.");
+        // Invia i dati all'ospite
+        setTimeout(() => {
+          sendData({ 
+            type: 'START_MULTIPLAYER', 
+            category: currentCategory,
+            mode: gameMode 
+          });
+        }, 200);
       }
-    });
+    };
+
+    // Se la connessione è già aperta la usiamo subito, altrimenti agganciamo l'open
+    if (connection.open) {
+      triggerStart();
+    } else {
+      connection.on('open', triggerStart);
+    }
   });
 }
 
