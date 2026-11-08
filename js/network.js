@@ -47,16 +47,14 @@ function createRoom() {
     if (statusEl) statusEl.innerText = `Stanza creata! Codice: ${id}. In attesa dell'amico...`;
   });
 
+  // METODO CORRETTO DI PEERJS: L'ascoltatore va direttamente sull'istanza peer
   peer.on('connection', (conn) => {
     connection = conn;
-    if (statusEl) statusEl.innerText = "L'amico si è collegato! Avvio in corso...";
+    if (statusEl) statusEl.innerText = "L'amico si è collegato! Apertura porta...";
     
     if (typeof bot !== 'undefined') bot.stopThinking();
 
-    dataListenerAttached = false; 
-    setupDataListener();
-
-    conn.on('open', () => {
+    connection.on('open', () => {
       if (statusEl) statusEl.innerText = "Porta aperta! Partita avviata!";
       
       // Sblocca subito la schermata nascondendo il setup e avviando il gioco
@@ -78,8 +76,11 @@ function createRoom() {
         }, 300);
       }
     });
+
+    dataListenerAttached = false; 
+    setupDataListener();
   });
-} // <--- Questa chiusura mancava!
+}
 
 function joinRoom() {
   isHost = false;
@@ -102,7 +103,7 @@ function joinRoom() {
     connection = peer.connect(targetId); 
     
     connection.on('open', () => {
-      if (statusEl) statusEl.innerText = `3. Aggancio riuscito! Attendo il via dall'Host...`;
+      if (statusEl) statusEl.innerText = `3. Aggancio riuscito! Sincronizzazione...`;
       if (typeof bot !== 'undefined') bot.stopThinking();
       
       dataListenerAttached = false;
@@ -110,7 +111,6 @@ function joinRoom() {
     });
   });
 }
-
 function setupDataListener() {
   if (!connection || dataListenerAttached) return;
   dataListenerAttached = true;
