@@ -55,7 +55,12 @@ function joinRoom() {
 function setupDataListener() {
   if (!connection || dataListenerAttached) return;
   dataListenerAttached = true;
-// 👇 L'host riceve l'ok dell'amica e fa partire la partita per entrambi!
+
+  // Tutto quello che riceviamo dalla rete passa da qui dentro:
+  connection.on('data', (data) => {
+    
+    // 👇 ORA È NEL POSTO GIUSTO!
+    // L'host riceve l'ok dell'amica e fa partire la partita per entrambi!
     if (data.type === 'GUEST_READY' && isHost) {
       if (typeof DICTIONARY === 'undefined') {
         alert("⚠️ ERRORE: Il file dictionary.js è rotto! Controlla le virgole.");
@@ -73,7 +78,7 @@ function setupDataListener() {
         mode: gameMode 
       });
     }
-  connection.on('data', (data) => {
+
     if (data.type === 'START_MULTIPLAYER') {
       if (data.mode) {
         gameMode = data.mode;
