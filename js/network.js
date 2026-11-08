@@ -1,6 +1,9 @@
-// Inizializza Supabase (inserisci i tuoi dati reali qui)
-const supabaseUrl = 'https://itjgnwldswolupeekmzq.supabase.co/rest/v1/';
+// Inizializza Supabase (solo l'URL base, senza /rest/v1/)
+const supabaseUrl = 'https://itjgnwldswolupeekmzq.supabase.co';
 const supabaseKey = 'sb_publishable__XpUuZxIvIlEYjn5hrE1ww_g0lcJcIt';
+
+// CAMBIATO NOME QUI PER EVITARE CONFLITTI:
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // CAMBIATO NOME QUI PER EVITARE CONFLITTI:
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
