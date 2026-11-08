@@ -59,7 +59,10 @@ function createRoom() {
     conn.on('open', () => {
       if (statusEl) statusEl.innerText = "Porta aperta! Partita avviata!";
       
-      // L'Host prende il comando, sceglie la categoria e la manda all'ospite
+      // Sblocca subito la schermata nascondendo il setup e avviando il gioco
+      const setupEl = document.getElementById('multiplayer-setup');
+      if (setupEl) setupEl.style.display = 'none';
+
       if (typeof DICTIONARY !== 'undefined') {
         const categories = Object.keys(DICTIONARY);
         currentCategory = categories[Math.floor(Math.random() * categories.length)];
@@ -73,12 +76,10 @@ function createRoom() {
             mode: gameMode 
           });
         }, 300);
-      } else {
-        alert("⚠️ ERRORE: Il dizionario non è caricato correttamente.");
       }
     });
   });
-}
+} // <--- Questa chiusura mancava!
 
 function joinRoom() {
   isHost = false;
@@ -139,6 +140,10 @@ function setupDataListener() {
       if (data.mode) {
         gameMode = data.mode;
       }
+      // Sblocca la grafica anche per il Guest se riceve il via
+      const setupEl = document.getElementById('multiplayer-setup');
+      if (setupEl) setupEl.style.display = 'none';
+
       startMultiplayerGame(data.category);
     }
 
