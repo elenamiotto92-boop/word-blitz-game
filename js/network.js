@@ -63,7 +63,7 @@ function setupSupabaseListener() {
     const data = payload.payload;
     const statusEl = document.getElementById('connection-status');
 
-    if (data.type === 'GUEST_READY' && isHost) {
+  if (data.type === 'GUEST_READY' && isHost) {
       if (statusEl) statusEl.innerText = "L'amico è entrato! Avvio in corso...";
       const setupEl = document.getElementById('multiplayer-setup');
       if (setupEl) setupEl.style.display = 'none';
@@ -78,13 +78,16 @@ function setupSupabaseListener() {
       
       startMultiplayerGame(currentCategory);
       
-      sendData({ 
-        type: 'START_MULTIPLAYER', 
-        category: currentCategory,
-        mode: gameMode 
-      });
+      // 🔑 IL TRUCCO: Diamo al telefono mezzo secondo per mettersi in ascolto della risposta
+      setTimeout(() => {
+        sendData({ 
+          type: 'START_MULTIPLAYER', 
+          category: currentCategory,
+          mode: gameMode 
+        });
+      }, 500);
     }
-
+    
     if (data.type === 'START_MULTIPLAYER') {
       if (data.mode) {
         gameMode = data.mode;
