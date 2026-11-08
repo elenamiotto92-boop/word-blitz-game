@@ -9,19 +9,15 @@ function showMultiplayerSetup() {
 
 function createRoom() {
   isHost = true;
-  
-  // 👇 Legge il codice che hai scritto nella casellina!
   let customId = document.getElementById('room-code-input').value.trim();
   
-  // Se non scrivi nulla, ne inventa uno a caso (come faceva prima)
   if (!customId) {
     customId = "room-" + Math.floor(1000 + Math.random() * 9000);
   }
   
   const statusEl = document.getElementById('connection-status');
-  if (statusEl) statusEl.innerText = "Creazione stanza in corso (connessione al server)...";
+  if (statusEl) statusEl.innerText = "Creazione stanza in corso...";
 
-  // Usa il codice che avete deciso
   peer = new Peer(customId);
 
   peer.on('error', (err) => {
@@ -30,17 +26,23 @@ function createRoom() {
   });
 
   peer.on('open', (id) => {
-    if (statusEl) statusEl.innerText = `Stanza creata! Codice: ${id}. In attesa dell'amico...`;
+    if (statusEl) statusEl.innerText = `Stanza creata! Codice: ${id}. In attesa...`;
   });
 
   peer.on('connection', (conn) => {
     connection = conn;
-    if (statusEl) statusEl.innerText = "Un amico sta provando a connettersi...";
+    if (statusEl) statusEl.innerText = "L'amico ha bussato! Sto aprendo la porta...";
     
     if (typeof bot !== 'undefined') bot.stopThinking();
 
-    // L'Host si mette in ascolto
-    setupDataListener();
+    // 👇 LA CORREZIONE È QUI: L'Host aspetta che la connessione sia 100% aperta!
+    conn.on('open', () => {
+      if (statusEl) statusEl.innerText = "Porta aperta! Ascolto l'amico...";
+      
+      // Sblocchiamo la ricezione dati in caso abbiate fatto tentativi precedenti
+      dataListenerAttached = false; 
+      setupDataListener();
+    });
   });
 }
 
@@ -50,7 +52,6 @@ function joinRoom() {
   if (!targetId) return alert("Inserisci un codice stanza!");
 
   const statusEl = document.getElementById('connection-status');
-  // 👇 FEEDBACK IMMEDIATO appena si preme il tasto!
   if (statusEl) statusEl.innerText = "1. Contatto il server centrale..."; 
 
   peer = new Peer();
@@ -61,24 +62,25 @@ function joinRoom() {
   });
 
   peer.on('open', () => {
-    if (statusEl) statusEl.innerText = `2. Server raggiunto! Cerco la stanza ${targetId}...`;
+    if (statusEl) statusEl.innerText = `2. Server raggiunto! Cerco la stanza...`;
     
-    // reliable: true aiuta a non perdere i pacchetti per strada
     connection = peer.connect(targetId, { reliable: true }); 
     
     connection.on('open', () => {
-      if (statusEl) statusEl.innerText = `3. Agganciato all'amico! Sincronizzazione...`;
+      if (statusEl) statusEl.innerText = `3. Agganciato! Sincronizzazione...`;
       if (typeof bot !== 'undefined') bot.stopThinking();
       
+      // Sblocchiamo la ricezione dati anche per il Guest
+      dataListenerAttached = false;
       setupDataListener();
       
-      // Il Guest avvisa l'Host
+      // Il Guest aspetta un pizzico in più (800ms) per essere sicuro che l'Host sia pronto ad ascoltare
       setTimeout(() => {
-         if (statusEl) statusEl.innerText = `4. Invio segnale di OK all'amico...`;
+         if (statusEl) statusEl.innerText = `4. Invio segnale di via libera!`;
          if (connection) {
            connection.send({ type: 'GUEST_READY' });
          }
-      }, 500); 
+      }, 800); 
     });
   });
 }
