@@ -44,12 +44,12 @@ function createRoom() {
   });
 
   peer.on('open', (id) => {
-    if (statusEl) statusEl.innerText = `Stanza creata! Codice: ${id}. In attesa...`;
+    if (statusEl) statusEl.innerText = `Stanza creata! Codice: ${id}. In attesa dell'amico...`;
   });
 
   peer.on('connection', (conn) => {
     connection = conn;
-    if (statusEl) statusEl.innerText = "Porta aperta! Entrambi dentro.";
+    if (statusEl) statusEl.innerText = "L'amico si è collegato! Avvio in corso...";
     
     if (typeof bot !== 'undefined') bot.stopThinking();
 
@@ -57,16 +57,24 @@ function createRoom() {
     setupDataListener();
 
     conn.on('open', () => {
-      if (statusEl) statusEl.innerText = "Porta aperta! Entrambi dentro.";
+      if (statusEl) statusEl.innerText = "Porta aperta! Partita avviata!";
       
-      // Sblocca subito la schermata di gioco e fa partire la categoria per entrambi
-      if (isHost && typeof DICTIONARY !== 'undefined') {
+      // L'Host prende il comando, sceglie la categoria e la manda all'ospite
+      if (typeof DICTIONARY !== 'undefined') {
+        const categories = Object.keys(DICTIONARY);
+        currentCategory = categories[Math.floor(Math.random() * categories.length)];
+        
+        startMultiplayerGame(currentCategory);
+        
         setTimeout(() => {
-          const categories = Object.keys(DICTIONARY);
-          currentCategory = categories[Math.floor(Math.random() * categories.length)];
-          startMultiplayerGame(currentCategory);
-          sendData({ type: 'START_MULTIPLAYER', category: currentCategory, mode: gameMode });
-        }, 500);
+          sendData({ 
+            type: 'START_MULTIPLAYER', 
+            category: currentCategory,
+            mode: gameMode 
+          });
+        }, 300);
+      } else {
+        alert("⚠️ ERRORE: Il dizionario non è caricato correttamente.");
       }
     });
   });
@@ -78,7 +86,7 @@ function joinRoom() {
   if (!targetId) return alert("Inserisci un codice stanza!");
 
   const statusEl = document.getElementById('connection-status');
-  if (statusEl) statusEl.innerText = "1. Contatto il server centrale..."; 
+  if (statusEl) statusEl.innerText = "1. Contatto il server..."; 
 
   peer = new Peer(peerConfig);
 
@@ -88,24 +96,16 @@ function joinRoom() {
   });
 
   peer.on('open', () => {
-    if (statusEl) statusEl.innerText = `2. Server raggiunto! Cerco la stanza...`;
+    if (statusEl) statusEl.innerText = `2. Connesso al server, aggancio stanza...`;
     
-    // Connessione standard
     connection = peer.connect(targetId); 
     
     connection.on('open', () => {
-      if (statusEl) statusEl.innerText = `3. Agganciato! Sincronizzazione in corso...`;
+      if (statusEl) statusEl.innerText = `3. Aggancio riuscito! Attendo il via dall'Host...`;
       if (typeof bot !== 'undefined') bot.stopThinking();
       
       dataListenerAttached = false;
       setupDataListener();
-      
-      setTimeout(() => {
-         if (statusEl) statusEl.innerText = `4. Invio segnale di via libera!`;
-         if (connection) {
-           connection.send({ type: 'GUEST_READY' });
-         }
-      }, 800); 
     });
   });
 }
