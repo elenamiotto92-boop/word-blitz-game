@@ -2,10 +2,7 @@
 const supabaseUrl = 'https://itjgnwldswolupeekmzq.supabase.co';
 const supabaseKey = 'sb_publishable__XpUuZxIvIlEYjn5hrE1ww_g0lcJcIt';
 
-// CAMBIATO NOME QUI PER EVITARE CONFLITTI:
-const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-// CAMBIATO NOME QUI PER EVITARE CONFLITTI:
+// INIZIALIZZAZIONE UNICA:
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let gameChannel = null;
@@ -26,7 +23,6 @@ function createRoom() {
   const statusEl = document.getElementById('connection-status');
   if (statusEl) statusEl.innerText = "Creazione stanza sul server...";
 
-  // Usa supabaseClient invece di supabase
   gameChannel = supabaseClient.channel(`room-${customId}`);
   setupSupabaseListener();
 
@@ -45,7 +41,6 @@ function joinRoom() {
   const statusEl = document.getElementById('connection-status');
   if (statusEl) statusEl.innerText = "Connessione al server di gioco..."; 
 
-  // Usa supabaseClient invece di supabase
   gameChannel = supabaseClient.channel(`room-${targetId}`);
   setupSupabaseListener();
 
