@@ -8,22 +8,37 @@ function showMultiplayerSetup() {
 }
 
 // ======================================================
-// CONFIGURAZIONE DI RETE: TUNNEL PRIVATO FORZATO (Anti-CGNAT)
+// CONFIGURAZIONE DI RETE: BATTERIA TURN COMPLETA 
 // ======================================================
 const peerConfig = {
-  debug: 2,
+  debug: 3, // Alzato a 3 per avere più dettagli in caso di errori futuri
   config: {
     'iceServers': [
-      { urls: 'stun:stun.l.google.com:19302' }, // Scorta Google
+      // 1. STUN Google di base
+      { urls: 'stun:stun.l.google.com:19302' },
+      
+      // 2. TURN su porta 80 (Standard)
+      { 
+        urls: 'turn:wordblitz.metered.live:80', 
+        username: 'd320ebb9b0b435f7d7013b1e', 
+        credential: 'ivPnAkRKyLfsRRVw' 
+      },
+      
+      // 3. TURN su porta 443 (Sicuro UDP)
+      { 
+        urls: 'turn:wordblitz.metered.live:443', 
+        username: 'd320ebb9b0b435f7d7013b1e', 
+        credential: 'ivPnAkRKyLfsRRVw' 
+      },
+      
+      // 4. TURN su porta 443 TCP (Anti-CGNAT Estremo)
       { 
         urls: 'turn:wordblitz.metered.live:443?transport=tcp', 
         username: 'd320ebb9b0b435f7d7013b1e', 
         credential: 'ivPnAkRKyLfsRRVw' 
       }
-    ],
-    // 👇 IL TRUCCO FINALE: Forza il browser a usare SOLO il tuo server privato.
-    // Ignora le reti locali e bypassa istantaneamente i blocchi di Iliad/Vodafone/Fastweb!
-    'iceTransportPolicy': 'relay'
+    ]
+    // Ho rimosso 'iceTransportPolicy': 'relay' per lasciare il browser libero di negoziare
   }
 };
 
