@@ -9,12 +9,20 @@ function showMultiplayerSetup() {
 
 function createRoom() {
   isHost = true;
-  const shortId = "room-" + Math.floor(1000 + Math.random() * 9000);
+  
+  // 👇 Legge il codice che hai scritto nella casellina!
+  let customId = document.getElementById('room-code-input').value.trim();
+  
+  // Se non scrivi nulla, ne inventa uno a caso (come faceva prima)
+  if (!customId) {
+    customId = "room-" + Math.floor(1000 + Math.random() * 9000);
+  }
   
   const statusEl = document.getElementById('connection-status');
   if (statusEl) statusEl.innerText = "Creazione stanza in corso (connessione al server)...";
 
-  peer = new Peer(shortId);
+  // Usa il codice che avete deciso
+  peer = new Peer(customId);
 
   peer.on('error', (err) => {
     alert("Errore di rete (Host): " + err.type);
