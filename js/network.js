@@ -1,29 +1,14 @@
-let peer = null;
-let connection = null;
+// Inizializza Supabase 
+const supabaseUrl = 'https://itjgnwldswolupeekmzq.supabase.co/rest/v1/';
+const supabaseKey = 'sb_publishable__XpUuZxIvIlEYjn5hrE1ww_g0lcJcIt';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+let gameChannel = null;
 let isHost = false;
-let dataListenerAttached = false; // Evita le doppie giocate
 
 function showMultiplayerSetup() {
   document.getElementById('multiplayer-setup').style.display = 'block';
 }
-
-// ======================================================
-// CONFIGURAZIONE DI RETE: BATTERIA TURN COMPLETA 
-// ======================================================
-const peerConfig = {
-  debug: 3,
-  config: {
-    'iceServers': [
-      // 1. STUN proprietario di Metered (Obbligatorio per sbloccare il TURN)
-      { urls: 'stun:wordblitz.metered.live:80' },
-      
-      // 2. I tre tunnel TURN (UDP e TCP)
-      { urls: 'turn:wordblitz.metered.live:80', username: 'd320ebb9b0b435f7d7013b1e', credential: 'ivPnAkRKyLfsRRVw' },
-      { urls: 'turn:wordblitz.metered.live:443', username: 'd320ebb9b0b435f7d7013b1e', credential: 'ivPnAkRKyLfsRRVw' },
-      { urls: 'turn:wordblitz.metered.live:443?transport=tcp', username: 'd320ebb9b0b435f7d7013b1e', credential: 'ivPnAkRKyLfsRRVw' }
-    ]
-  }
-};
 
 function createRoom() {
   isHost = true;
@@ -34,92 +19,57 @@ function createRoom() {
   }
   
   const statusEl = document.getElementById('connection-status');
-  if (statusEl) statusEl.innerText = "Creazione stanza in corso...";
+  if (statusEl) statusEl.innerText = "Creazione stanza sul server...";
 
-  peer = new Peer(customId, peerConfig);
+  // Crea il canale WebSocket con Supabase
+  gameChannel = supabase.channel(`room-${customId}`);
+  setupSupabaseListener();
 
-  peer.on('error', (err) => {
-    alert("Errore di rete (Host): " + err.type);
-    if (statusEl) statusEl.innerText = "Errore: " + err.type;
-  });
-
-  peer.on('open', (id) => {
-    if (statusEl) statusEl.innerText = `Stanza creata! Codice: ${id}. In attesa dell'amico...`;
-  });
-
-  // 🔑 FORZATURA TOTALE: Appena l'amico bussa, diamo un micro-tempo al canale TURN e avviamo
-  peer.on('connection', (conn) => {
-    connection = conn;
-    if (statusEl) statusEl.innerText = "🎉 Connessione stabilita! Partenza in corso...";
-    
-    if (typeof bot !== 'undefined') bot.stopThinking();
-
-    dataListenerAttached = false; 
-    setupDataListener();
-
-    // Sblocca subito la grafica e fa partire il gioco senza aspettare eventi bloccati
-    setTimeout(() => {
-      const setupEl = document.getElementById('multiplayer-setup');
-      if (setupEl) setupEl.style.display = 'none';
-
-      if (typeof DICTIONARY !== 'undefined') {
-        const categories = Object.keys(DICTIONARY);
-        currentCategory = categories[Math.floor(Math.random() * categories.length)];
-        
-        startMultiplayerGame(currentCategory);
-        
-        // Invia il segnale all'ospite
-        sendData({ 
-          type: 'START_MULTIPLAYER', 
-          category: currentCategory,
-          mode: gameMode 
-        });
-      } else {
-        alert("⚠️ ERRORE: Il dizionario non è caricato.");
-      }
-    }, 400); // 400 millisecondi di respiro per stabilizzare i pacchetti TURN
+  gameChannel.subscribe((status) => {
+    if (status === 'SUBSCRIBED') {
+      if (statusEl) statusEl.innerText = `Stanza creata! Codice: ${customId}. In attesa dell'amico...`;
+    }
   });
 }
+
 function joinRoom() {
   isHost = false;
   const targetId = document.getElementById('room-code-input').value.trim();
   if (!targetId) return alert("Inserisci un codice stanza!");
 
   const statusEl = document.getElementById('connection-status');
-  if (statusEl) statusEl.innerText = "1. Contatto il server..."; 
+  if (statusEl) statusEl.innerText = "Connessione al server di gioco..."; 
 
-  peer = new Peer(peerConfig);
+  // Si aggancia allo stesso canale creato dall'Host
+  gameChannel = supabase.channel(`room-${targetId}`);
+  setupSupabaseListener();
 
-  peer.on('error', (err) => {
-    alert("Errore di rete (Guest): " + err.type);
-    if (statusEl) statusEl.innerText = "Errore: " + err.type;
-  });
-
-  peer.on('open', () => {
-    if (statusEl) statusEl.innerText = `2. Connesso al server, aggancio stanza...`;
-    
-    connection = peer.connect(targetId); 
-    
-    connection.on('open', () => {
-      if (statusEl) statusEl.innerText = `3. Aggancio riuscito! Attendo i dati dall'Host...`;
+  gameChannel.subscribe((status) => {
+    if (status === 'SUBSCRIBED') {
+      if (statusEl) statusEl.innerText = "Agganciato! Invio segnale all'Host...";
       if (typeof bot !== 'undefined') bot.stopThinking();
       
-      dataListenerAttached = false;
-      setupDataListener();
-    });
+      // Il canale è aperto: mandiamo subito il segnale di ready
+      setTimeout(() => {
+        sendData({ type: 'GUEST_READY' });
+      }, 500);
+    }
   });
 }
 
-function setupDataListener() {
-  if (!connection || dataListenerAttached) return;
-  dataListenerAttached = true;
+function setupSupabaseListener() {
+  // Tutto quello che riceviamo dalla rete passa da qui dentro
+  gameChannel.on('broadcast', { event: 'game-action' }, (payload) => {
+    const data = payload.payload;
+    const statusEl = document.getElementById('connection-status');
 
-  // Tutto quello che riceviamo dalla rete passa da qui dentro:
-  connection.on('data', (data) => {
-    
     if (data.type === 'GUEST_READY' && isHost) {
+      if (statusEl) statusEl.innerText = "L'amico è entrato! Avvio in corso...";
+      const setupEl = document.getElementById('multiplayer-setup');
+      if (setupEl) setupEl.style.display = 'none';
+
       if (typeof DICTIONARY === 'undefined') {
-        alert("⚠️ ERRORE: Il file dictionary.js è rotto! Controlla le virgole.");
+        alert("⚠️ ERRORE: Il file dictionary.js è rotto!");
         return;
       }
       
@@ -139,7 +89,6 @@ function setupDataListener() {
       if (data.mode) {
         gameMode = data.mode;
       }
-      // Sblocca la grafica anche per il Guest se riceve il via
       const setupEl = document.getElementById('multiplayer-setup');
       if (setupEl) setupEl.style.display = 'none';
 
@@ -147,7 +96,7 @@ function setupDataListener() {
     }
 
     if (data.type === 'PLAY_CARD_STAGE') {
-      showCenterStage(data.letter, "L'avversario ha giocato questa lettera (ha parlato a voce)");
+      showCenterStage(data.letter, "L'avversario ha giocato questa lettera");
       lastPlayerId = "AVVERSARIO";
       registerWordPlay(`[LETTERA ${data.letter}]`, false, "AMICO");
     }
@@ -170,7 +119,7 @@ function setupDataListener() {
       playerHand.push({ ...penaltyCard, id: Math.random() });
       renderHand();
       const errorMsg = document.getElementById('error-msg');
-      if (errorMsg) errorMsg.innerText = "L'avversario ha cambiato categoria! +1 carta a testa.";
+      if (errorMsg) errorMsg.innerText = "L'avversario ha cambiato categoria! +1 carta.";
     }
 
     if (data.type === 'CHANGE_CATEGORY_ONLY') {
@@ -189,7 +138,6 @@ function setupDataListener() {
       renderHand();
     }
 
-    // L'avversario ha chiuso la mano per primo
     if (data.type === 'ROUND_OVER') {
       alert("L'avversario ha svuotato la mano per primo! Conteggio fulmini.");
       triggerRoundEnd(false, data.category, data.lightnings);
@@ -222,7 +170,11 @@ function setupDataListener() {
 }
 
 function sendData(payload) {
-  if (connection) {
-    connection.send(payload);
+  if (gameChannel) {
+    gameChannel.send({
+      type: 'broadcast',
+      event: 'game-action',
+      payload: payload
+    });
   }
 }
