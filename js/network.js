@@ -7,7 +7,12 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let gameChannel = null;
 let isHost = false;
-let connection = true; 
+let connection = {
+  open: true,
+  send: function(payload) {
+    sendData(payload); // Dirotta il pacchetto nel nuovo tunnel!
+  }
+};
 let peer = true;
 
 function showMultiplayerSetup() {
