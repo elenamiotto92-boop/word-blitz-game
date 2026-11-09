@@ -1,28 +1,39 @@
-// Inizializza Supabase (solo l'URL base, senza /rest/v1/)
 const supabaseUrl = 'https://itjgnwldswolupeekmzq.supabase.co';
 const supabaseKey = 'sb_publishable__XpUuZxIvIlEYjn5hrE1ww_g0lcJcIt';
 
-// INIZIALIZZAZIONE UNICA:
-const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+function getSupabaseClient() {
+  if (!window.supabase) {
+    alert("⚠️ Server Supabase non disponibile, ricarica la pagina.");
+    return null;
+  }
+  if (!window.supabaseClientInstance) {
+    window.supabaseClientInstance = window.supabase.createClient(supabaseUrl, supabaseKey);
+  }
+  return window.supabaseClientInstance;
+}
 
 let gameChannel = null;
 let isHost = false;
+
 let connection = {
   open: true,
   send: function(payload) {
-    sendData(payload); // Dirotta il pacchetto nel nuovo tunnel!
+    sendData(payload);
   }
 };
 let peer = true;
 
 function showMultiplayerSetup() {
-  document.getElementById('multiplayer-setup').style.display = 'block';
+  const setupEl = document.getElementById('multiplayer-setup');
+  if (setupEl) setupEl.style.display = 'block';
 }
 
 function createRoom() {
   isHost = true;
+  const client = getSupabaseClient();
+  if (!client) return;
+
   let customId = document.getElementById('room-code-input').value.trim();
-  
   if (!customId) {
     customId = "room-" + Math.floor(1000 + Math.random() * 9000);
   }
@@ -30,7 +41,7 @@ function createRoom() {
   const statusEl = document.getElementById('connection-status');
   if (statusEl) statusEl.innerText = "Creazione stanza sul server...";
 
-  gameChannel = supabaseClient.channel(`room-${customId}`);
+  gameChannel = client.channel(`room-${customId}`);
   setupSupabaseListener();
 
   gameChannel.subscribe((status) => {
@@ -42,28 +53,33 @@ function createRoom() {
 
 function joinRoom() {
   isHost = false;
+  const client = getSupabaseClient();
+  if (!client) return;
+
   const targetId = document.getElementById('room-code-input').value.trim();
   if (!targetId) return alert("Inserisci un codice stanza!");
 
   const statusEl = document.getElementById('connection-status');
   if (statusEl) statusEl.innerText = "Connessione al server di gioco..."; 
 
-  gameChannel = supabaseClient.channel(`room-${targetId}`);
+  gameChannel = client.channel(`room-${targetId}`);
   setupSupabaseListener();
 
   gameChannel.subscribe((status) => {
     if (status === 'SUBSCRIBED') {
       if (statusEl) statusEl.innerText = "Agganciato! Invio segnale all'Host...";
-      if (typeof bot !== 'undefined') bot.stopThinking();
+      if (typeof bot !== 'undefined' && bot) bot.stopThinking();
       
-      // Il canale è aperto: mandiamo subito il segnale di ready
       setTimeout(() => {
         sendData({ type: 'GUEST_READY' });
       }, 500);
     }
   });
 }
+
 function setupSupabaseListener() {
+  if (!gameChannel) return;
+
   gameChannel.on('broadcast', { event: 'game-action' }, (payload) => {
     const data = payload.payload;
     const statusEl = document.getElementById('connection-status');
