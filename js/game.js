@@ -23,6 +23,32 @@ const LETTERS_POOL = [
   { letter: 'Y', lightnings: 3 }, { letter: 'Z', lightnings: 3 }
 ];
 
+// --- GESTIONE E SINCRONIZZAZIONE CATEGORIE UNIFICATA ---
+function syncCategory(newCategory) {
+  currentCategory = newCategory;
+  window.currentCategory = newCategory;
+  
+  if (typeof DICTIONARY !== 'undefined') {
+    if (!availableCategories || availableCategories.length === 0) {
+      availableCategories = Object.keys(DICTIONARY);
+    }
+    const index = availableCategories.indexOf(newCategory);
+    if (index !== -1) {
+      availableCategories.splice(index, 1);
+    }
+  }
+}
+
+function pickRandomCategory() {
+  if (typeof DICTIONARY === 'undefined') return;
+  if (!availableCategories || availableCategories.length === 0) {
+    availableCategories = Object.keys(DICTIONARY);
+  }
+  const randomIndex = Math.floor(Math.random() * availableCategories.length);
+  syncCategory(availableCategories[randomIndex]);
+}
+
+// --- LOGICA DI GIOCO ---
 function selectGameMode(mode) {
   gameMode = mode;
   const setupBox = document.getElementById('multiplayer-setup');
@@ -165,9 +191,7 @@ function playCardLocal(cardIndex) {
   renderHand();
 
   lastPlayedWord = card.letter;
-  
   showCenterStage(card.letter, "Hai giocato la lettera:"); 
-  
   lastPlayerId = "TU";
 
   if (typeof sendData === 'function' && connection && connection.open) {
@@ -269,17 +293,17 @@ function changeCategoryWithPenalty() {
       bot.hand.push({ ...penaltyCardBot, id: Math.random() });
       bot.stopThinking();
     }
-  } else if (typeof sendData === 'function') {
+  } 
+  
+  pickRandomCategory(); 
+  
+  if (connection && connection.open && typeof sendData === 'function') {
     sendData({ type: 'PENALTY_CARD_BOTH' });
+    sendData({ type: 'CHANGE_CATEGORY_ONLY', category: currentCategory });
   }
 
   const errorMsg = document.getElementById('error-msg');
   if (errorMsg) errorMsg.innerText = "Categoria cambiata! +1 carta a testa.";
-
-  pickRandomCategory();
-  if (typeof isHost !== 'undefined' && isHost && connection && connection.open) {
-    sendData({ type: 'CHANGE_CATEGORY_ONLY', category: currentCategory });
-  }
 
   nextCategoryCard();
 }
@@ -349,7 +373,6 @@ function drawHand() {
 
 function checkGameWinCondition() {
   let bScore = 0;
-  
   const botEl = document.getElementById('bot-lightnings');
   if (botEl) {
     const match = botEl.innerText.match(/\d+/);
@@ -398,7 +421,7 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
     if (incomingCategory) {
       syncCategory(incomingCategory); 
     }
-  } // 👈 QUESTA È LA PARENTESI CHE NON C'ERA E CHE ROMPEVA TUTTO!
+  }
 
   if (playerLightnings > oldLightnings) {
     triggerPenaltyEffect();
@@ -457,4 +480,81 @@ function showGameOverModal(isVictory, message) {
 
 function triggerPenaltyEffect() {
   const container = document.getElementById('game-container') || document.body;
-  if (
+  if (container) {
+    container.classList.remove('shake-animation');
+    void container.offsetWidth; 
+    container.classList.add('shake-animation');
+    setTimeout(() => {
+      container.classList.remove('shake-animation');
+    }, 400);
+  }
+
+  const lightningEl = document.getElementById('player-lightnings');
+  if (lightningEl) {
+    lightningEl.classList.remove('flash-warning');
+    void lightningEl.offsetWidth; 
+    lightningEl.classList.add('flash-warning');
+    setTimeout(() => {
+      lightningEl.classList.remove('flash-warning');
+    }, 600);
+  }
+}
+
+function startVoiceRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert("Comandi vocali non supportati dal browser.");
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'it-IT';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  const micButton = document.getElementById('btn-mic');
+  if (micButton) micButton.style.background = '#f1c40f';
+  
+  const errorMsg = document.getElementById('error-msg');
+  if (errorMsg) errorMsg.innerText = "🎤 In ascolto...";
+
+  recognition.start();
+
+  recognition.onresult = (event) => {
+    const spokenWord = event.results[0][0].transcript.trim().toUpperCase();
+    if (micButton) micButton.style.background = '#e74c3c';
+    if (errorMsg) errorMsg.innerText = "";
+    processPlayerWord(spokenWord);
+  };
+
+  recognition.onerror = () => {
+    if (micButton) micButton.style.background = '#e74c3c';
+    if (errorMsg) errorMsg.innerText = "Riprova!";
+  };
+
+  recognition.onspeechend = () => {
+    recognition.stop();
+    if (micButton) micButton.style.background = '#e74c3c';
+  };
+}
+
+setInterval(() => {
+  const modal = document.getElementById('game-over-modal');
+  if (modal && modal.style.display === 'flex') return;
+
+  if (playerLightnings >= 40) {
+    showGameOverModal(false, "Hai raggiunto 40 fulmini... Peccato, ha vinto l'avversario!");
+    return;
+  }
+
+  const botEl = document.getElementById('bot-lightnings');
+  if (botEl) {
+    const numeriEstratti = botEl.innerText.match(/\d+/g); 
+    if (numeriEstratti) {
+      const punteggioAvversario = parseInt(numeriEstratti[0], 10);
+      if (punteggioAvversario >= 40) {
+        showGameOverModal(true, "L'avversario ha raggiunto 40 fulmini! Complimenti, hai vinto la partita!");
+      }
+    }
+  }
+}, 500);
