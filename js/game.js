@@ -67,14 +67,13 @@ function startSinglePlayer() {
 function startMultiplayerGame(initialCategory) {
   startGameScreen();
   if (initialCategory) {
-    currentCategory = initialCategory;
+    syncCategory(initialCategory);
   } else {
     pickRandomCategory();
   }
   playerHand = drawHand();
   nextCategoryCard();
 }
-
 
 function nextCategoryCard() {
   wordsPlayedOnCard = 0;
@@ -167,7 +166,6 @@ function playCardLocal(cardIndex) {
 
   lastPlayedWord = card.letter;
   
-  // 👇 Qui abbiamo rimosso "DICI LA PAROLA A VOCE!"
   showCenterStage(card.letter, "Hai giocato la lettera:"); 
   
   lastPlayerId = "TU";
@@ -187,7 +185,6 @@ function playCardLocal(cardIndex) {
     triggerRoundEnd(true);
   }
 }
-
 
 function processPlayerWord(typedWord) {
   const errorMsg = document.getElementById('error-msg');
@@ -305,7 +302,6 @@ function assignPenaltyCard(reasonText) {
   const penaltyCard = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
   playerHand.push({ ...penaltyCard, id: Math.random() });
   renderHand();
-  // 👇 Attiva l'animazione di penalità
   triggerPenaltyEffect();
   const errorMsg = document.getElementById('error-msg');
   if (errorMsg) errorMsg.innerText = `${reasonText} +1 carta!`;
@@ -328,7 +324,6 @@ function drawHand() {
   const letterCounts = {};
   let hasCategoryRestriction = false;
 
-  // Controlla che la categoria esista e abbia parole all'interno
   if (typeof DICTIONARY !== 'undefined' && Array.isArray(DICTIONARY[currentCategory]) && DICTIONARY[currentCategory].length > 0) {
     hasCategoryRestriction = true;
     DICTIONARY[currentCategory].forEach(word => {
@@ -355,20 +350,17 @@ function drawHand() {
 function checkGameWinCondition() {
   let bScore = 0;
   
-  // Estraiamo il numero ESATTO direttamente dal testo che si vede sullo schermo
   const botEl = document.getElementById('bot-lightnings');
   if (botEl) {
     const match = botEl.innerText.match(/\d+/);
     bScore = match ? parseInt(match[0], 10) : 0;
   }
 
-  // Controllo Sconfitta (Tu arrivi a 40 o più)
   if (playerLightnings >= 40) {
     showGameOverModal(false, "Hai raggiunto 40 fulmini... Peccato, ha vinto l'avversario!");
     return true;
   }
 
-  // Controllo Vittoria (L'avversario arriva a 40 o più)
   if (bScore >= 40) {
     showGameOverModal(true, "L'avversario ha raggiunto 40 fulmini! Complimenti, hai vinto la partita!");
     return true;
@@ -403,17 +395,15 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
     }
     playerLightnings += myPenalties;
 
-
-     if (incomingCategory) {
-    syncCategory(incomingCategory); // <-- Prima era currentCategory = incomingCategory;
-  }
-    
+    if (incomingCategory) {
+      syncCategory(incomingCategory); 
+    }
+  } // 👈 QUESTA È LA PARENTESI CHE NON C'ERA E CHE ROMPEVA TUTTO!
 
   if (playerLightnings > oldLightnings) {
     triggerPenaltyEffect();
   }
 
-  // AGGIORNAMENTO DOM (Scrive i punteggi sullo schermo)
   const playerLightningsEl = document.getElementById('player-lightnings');
   if (playerLightningsEl) playerLightningsEl.innerText = playerLightnings;
 
@@ -430,10 +420,8 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
     sendData({ type: 'UPDATE_LIGHTNINGS', lightnings: playerLightnings });
   }
 
-  // 👇 CONTROLLO VITTORIA BLINDATO
-  // Ora scatta subito dopo aver aggiornato lo schermo e lo legge perfettamente
   if (checkGameWinCondition()) {
-    return; // Se qualcuno ha vinto, blocca la manche e mostra il pop-up!
+    return; 
   }
 
   alert("Nuova manche! Distribuite 7 nuove carte a tutti.");
@@ -445,6 +433,7 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
 
   nextCategoryCard();
 }
+
 function showGameOverModal(isVictory, message) {
   const modal = document.getElementById('game-over-modal');
   const title = document.getElementById('modal-title');
@@ -467,180 +456,5 @@ function showGameOverModal(isVictory, message) {
 }
 
 function triggerPenaltyEffect() {
-  // 1. Effetto scossa sullo schermo
   const container = document.getElementById('game-container') || document.body;
-  if (container) {
-    container.classList.remove('shake-animation');
-    void container.offsetWidth; // 👈 Trucco per forzare il riavvio dell'animazione
-    container.classList.add('shake-animation');
-    setTimeout(() => {
-      container.classList.remove('shake-animation');
-    }, 400);
-  }
-
-  // 2. Effetto lampeggio rosso sul contatore fulmini
-  const lightningEl = document.getElementById('player-lightnings');
-  if (lightningEl) {
-    lightningEl.classList.remove('flash-warning');
-    void lightningEl.offsetWidth; // 👈 Trucco per forzare il riavvio dell'animazione
-    lightningEl.classList.add('flash-warning');
-    setTimeout(() => {
-      lightningEl.classList.remove('flash-warning');
-    }, 600);
-  }
-}
-
-
-function startVoiceRecognition() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    alert("Comandi vocali non supportati dal browser.");
-    return;
-  }
-
-  const recognition = new SpeechRecognition();
-  recognition.lang = 'it-IT';
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-
-  const micButton = document.getElementById('btn-mic');
-  if (micButton) micButton.style.background = '#f1c40f';
-  
-  const errorMsg = document.getElementById('error-msg');
-  if (errorMsg) errorMsg.innerText = "🎤 In ascolto...";
-
-  recognition.start();
-
-  recognition.onresult = (event) => {
-    const spokenWord = event.results[0][0].transcript.trim().toUpperCase();
-    if (micButton) micButton.style.background = '#e74c3c';
-    if (errorMsg) errorMsg.innerText = "";
-    processPlayerWord(spokenWord);
-  };
-
-  recognition.onerror = () => {
-    if (micButton) micButton.style.background = '#e74c3c';
-    if (errorMsg) errorMsg.innerText = "Riprova!";
-  };
-
-  recognition.onspeechend = () => {
-    recognition.stop();
-    if (micButton) micButton.style.background = '#e74c3c';
-  };
-}
-
-function pickRandomCategory() {
-  if (typeof DICTIONARY === 'undefined') return;
-
-  // Se la lista delle categorie disponibili è vuota (all'inizio o se sono finite), la riempiamo
-  if (availableCategories.length === 0) {
-    availableCategories = Object.keys(DICTIONARY);
-  }
-
-  // Peschiamo un indice a caso tra le categorie ancora disponibili nella lista
-  const randomIndex = Math.floor(Math.random() * availableCategories.length);
-  currentCategory = availableCategories[randomIndex];
-
-  // Rimuoviamo la categoria appena pescata così non potrà uscire di nuovo
-  availableCategories.splice(randomIndex, 1);
-}
-
-// ==========================================
-// SISTEMA DI VITTORIA INFALLIBILE (IN TEMPO REALE)
-// ==========================================
-setInterval(() => {
-  // Evita che il messaggio appaia in loop se è già aperto
-  const modal = document.getElementById('game-over-modal');
-  if (modal && modal.style.display === 'flex') return;
-
-  // 1. Controlla te stesso
-  if (playerLightnings >= 40) {
-    showGameOverModal(false, "Hai raggiunto 40 fulmini... Peccato, ha vinto l'avversario!");
-    return;
-  }
-
-  // 2. Controlla l'avversario leggendo il numero direttamente dal tabellone visivo
-  const botEl = document.getElementById('bot-lightnings');
-  if (botEl) {
-    const numeriEstratti = botEl.innerText.match(/\d+/g); 
-    if (numeriEstratti) {
-      // Prende il primo numero che trova (es: dal testo "41 / 40" prende "41")
-      const punteggioAvversario = parseInt(numeriEstratti[0], 10);
-      
-      if (punteggioAvversario >= 40) {
-        showGameOverModal(true, "L'avversario ha raggiunto 40 fulmini! Complimenti, hai vinto la partita!");
-      }
-    }
-  }
-}, 500); // Fa un controllo ogni mezzo secondo
-
-// ==========================================
-// FIX SINCRONIZZAZIONE E ANTI-RIPETIZIONE CATEGORIE
-// ==========================================
-
-// 1. Nuova funzione per impostare la categoria e DEPENNARLA dalla lista
-function syncCategory(newCategory) {
-  currentCategory = newCategory;
-  window.currentCategory = newCategory;
-  
-  if (typeof DICTIONARY !== 'undefined') {
-    if (availableCategories.length === 0) {
-      availableCategories = Object.keys(DICTIONARY);
-    }
-    // Cerca la categoria e la cancella per sempre dall'elenco locale
-    const index = availableCategories.indexOf(newCategory);
-    if (index !== -1) {
-      availableCategories.splice(index, 1);
-    }
-  }
-}
-
-// 2. Il nuovo "Pesca a caso" ora depenna automaticamente
-function pickRandomCategory() {
-  if (typeof DICTIONARY === 'undefined') return;
-  if (availableCategories.length === 0) {
-    availableCategories = Object.keys(DICTIONARY);
-  }
-  const randomIndex = Math.floor(Math.random() * availableCategories.length);
-  syncCategory(availableCategories[randomIndex]);
-}
-
-// 3. Il nuovo avvio multiplayer ora usa la sincronizzazione corretta
-function startMultiplayerGame(initialCategory) {
-  startGameScreen();
-  if (initialCategory) {
-    syncCategory(initialCategory);
-  } else {
-    pickRandomCategory();
-  }
-  playerHand = drawHand();
-  nextCategoryCard();
-}
-
-// 4. Il nuovo "Cambia Categoria" ora trasmette SEMPRE il comando a tutti
-function changeCategoryWithPenalty() {
-  const penaltyCardPlayer = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
-  playerHand.push({ ...penaltyCardPlayer, id: Math.random() });
-  renderHand();
-
-  if (!connection || !connection.open) {
-    if (bot && bot.hand) {
-      const penaltyCardBot = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
-      bot.hand.push({ ...penaltyCardBot, id: Math.random() });
-      bot.stopThinking();
-    }
-  } 
-  
-  pickRandomCategory(); // Tu peschi e depenni
-  
-  // ORA SPEDISCE A TUTTI, a prescindere se sei Host o Guest!
-  if (connection && connection.open && typeof sendData === 'function') {
-    sendData({ type: 'PENALTY_CARD_BOTH' });
-    sendData({ type: 'CHANGE_CATEGORY_ONLY', category: currentCategory });
-  }
-
-  const errorMsg = document.getElementById('error-msg');
-  if (errorMsg) errorMsg.innerText = "Categoria cambiata! +1 carta a testa.";
-
-  nextCategoryCard();
-}
+  if (
