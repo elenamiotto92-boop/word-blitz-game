@@ -403,10 +403,11 @@ function triggerRoundEnd(iClosedFirst, incomingCategory = null, incomingLightnin
     }
     playerLightnings += myPenalties;
 
-    if (incomingCategory) {
-      currentCategory = incomingCategory;
-    }
+
+     if (incomingCategory) {
+    syncCategory(incomingCategory); // <-- Prima era currentCategory = incomingCategory;
   }
+    
 
   if (playerLightnings > oldLightnings) {
     triggerPenaltyEffect();
@@ -572,3 +573,74 @@ setInterval(() => {
     }
   }
 }, 500); // Fa un controllo ogni mezzo secondo
+
+// ==========================================
+// FIX SINCRONIZZAZIONE E ANTI-RIPETIZIONE CATEGORIE
+// ==========================================
+
+// 1. Nuova funzione per impostare la categoria e DEPENNARLA dalla lista
+function syncCategory(newCategory) {
+  currentCategory = newCategory;
+  window.currentCategory = newCategory;
+  
+  if (typeof DICTIONARY !== 'undefined') {
+    if (availableCategories.length === 0) {
+      availableCategories = Object.keys(DICTIONARY);
+    }
+    // Cerca la categoria e la cancella per sempre dall'elenco locale
+    const index = availableCategories.indexOf(newCategory);
+    if (index !== -1) {
+      availableCategories.splice(index, 1);
+    }
+  }
+}
+
+// 2. Il nuovo "Pesca a caso" ora depenna automaticamente
+function pickRandomCategory() {
+  if (typeof DICTIONARY === 'undefined') return;
+  if (availableCategories.length === 0) {
+    availableCategories = Object.keys(DICTIONARY);
+  }
+  const randomIndex = Math.floor(Math.random() * availableCategories.length);
+  syncCategory(availableCategories[randomIndex]);
+}
+
+// 3. Il nuovo avvio multiplayer ora usa la sincronizzazione corretta
+function startMultiplayerGame(initialCategory) {
+  startGameScreen();
+  if (initialCategory) {
+    syncCategory(initialCategory);
+  } else {
+    pickRandomCategory();
+  }
+  playerHand = drawHand();
+  nextCategoryCard();
+}
+
+// 4. Il nuovo "Cambia Categoria" ora trasmette SEMPRE il comando a tutti
+function changeCategoryWithPenalty() {
+  const penaltyCardPlayer = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
+  playerHand.push({ ...penaltyCardPlayer, id: Math.random() });
+  renderHand();
+
+  if (!connection || !connection.open) {
+    if (bot && bot.hand) {
+      const penaltyCardBot = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
+      bot.hand.push({ ...penaltyCardBot, id: Math.random() });
+      bot.stopThinking();
+    }
+  } 
+  
+  pickRandomCategory(); // Tu peschi e depenni
+  
+  // ORA SPEDISCE A TUTTI, a prescindere se sei Host o Guest!
+  if (connection && connection.open && typeof sendData === 'function') {
+    sendData({ type: 'PENALTY_CARD_BOTH' });
+    sendData({ type: 'CHANGE_CATEGORY_ONLY', category: currentCategory });
+  }
+
+  const errorMsg = document.getElementById('error-msg');
+  if (errorMsg) errorMsg.innerText = "Categoria cambiata! +1 carta a testa.";
+
+  nextCategoryCard();
+}
