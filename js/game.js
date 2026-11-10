@@ -126,6 +126,9 @@ function nextCategoryCard() {
   
   renderHand();
 
+  // 👇 Appena arriva una nuova categoria, il tasto parte bloccato per 30 secondi!
+  startCategoryCooldownTimer();
+
   if (!connection || !connection.open) {
     if (bot) bot.startThinking(currentCategory, handleBotPlay);
   }
@@ -290,9 +293,10 @@ function contestLastPlay() {
 }
 
 function changeCategoryWithPenalty() {
+  // Se mancano secondi alla fine del timer, il tasto non fa nulla!
   if (categoryCooldownRemaining > 0) {
     const errorMsg = document.getElementById('error-msg');
-    if (errorMsg) errorMsg.innerText = `⏳ Attendi ancora ${categoryCooldownRemaining}s per cambiare categoria!`;
+    if (errorMsg) errorMsg.innerText = `⏳ Attendi ancora ${categoryCooldownRemaining}s per poter cambiare categoria!`;
     return;
   }
 
@@ -318,8 +322,7 @@ function changeCategoryWithPenalty() {
   const errorMsg = document.getElementById('error-msg');
   if (errorMsg) errorMsg.innerText = "Categoria cambiata! +1 carta a testa.";
 
-  nextCategoryCard();
-  startCategoryCooldownTimer();
+  nextCategoryCard(); // Questo ricaricherà la nuova categoria e farà ripartire i 30s di blocco
 }
 
 function startCategoryCooldownTimer() {
