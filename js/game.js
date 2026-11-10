@@ -13,6 +13,10 @@ let playerHand = [];
 let playerLightnings = 0;
 const bot = typeof BotPlayer !== 'undefined' ? new BotPlayer() : null;
 
+// Gestione Cooldown Cambio Categoria
+let categoryCooldownTimer = null;
+let categoryCooldownRemaining = 0;
+
 const LETTERS_POOL = [
   { letter: 'A', lightnings: 2 }, { letter: 'B', lightnings: 2 }, { letter: 'C', lightnings: 1 }, { letter: 'D', lightnings: 2 },
   { letter: 'E', lightnings: 1 }, { letter: 'F', lightnings: 2 }, { letter: 'G', lightnings: 2 }, { letter: 'H', lightnings: 3 },
@@ -23,7 +27,6 @@ const LETTERS_POOL = [
   { letter: 'Y', lightnings: 3 }, { letter: 'Z', lightnings: 3 }
 ];
 
-// --- GESTIONE E SINCRONIZZAZIONE CATEGORIE UNIFICATA ---
 function syncCategory(newCategory) {
   currentCategory = newCategory;
   window.currentCategory = newCategory;
@@ -48,7 +51,6 @@ function pickRandomCategory() {
   syncCategory(availableCategories[randomIndex]);
 }
 
-// --- LOGICA DI GIOCO ---
 function selectGameMode(mode) {
   gameMode = mode;
   const setupBox = document.getElementById('multiplayer-setup');
@@ -74,18 +76,18 @@ function startGameScreen() {
     wordInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') submitTypedWord();
     });
+    wordInput.addEventListener('focus', () => {
+      setTimeout(() => {
+        wordInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    });
   }
 
   if (typeof setupDataListener === 'function') {
     setupDataListener();
   }
 }
-// Aggiungi dentro startGameScreen() dopo l'event listener della tastiera:
-wordInput.addEventListener('focus', () => {
-  setTimeout(() => {
-    wordInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 300);
-});
+
 function startSinglePlayer() {
   if (typeof DICTIONARY === 'undefined') return alert("Dizionario non caricato!");
   startGameScreen();
@@ -286,12 +288,8 @@ function contestLastPlay() {
     if (errorMsg) errorMsg.innerText = "Hai contestato! L'avversario pesca +1 carta.";
   }
 }
-// Variable per il cooldown del cambio categoria
-let categoryCooldownTimer = null;
-let categoryCooldownRemaining = 0;
 
 function changeCategoryWithPenalty() {
-  // Blocco se il timer da 30s è ancora attivo
   if (categoryCooldownRemaining > 0) {
     const errorMsg = document.getElementById('error-msg');
     if (errorMsg) errorMsg.innerText = `⏳ Attendi ancora ${categoryCooldownRemaining}s per cambiare categoria!`;
@@ -321,14 +319,12 @@ function changeCategoryWithPenalty() {
   if (errorMsg) errorMsg.innerText = "Categoria cambiata! +1 carta a testa.";
 
   nextCategoryCard();
-
-  // Avvia il conto alla rovescia di 30 secondi
   startCategoryCooldownTimer();
 }
 
 function startCategoryCooldownTimer() {
-  const btn = document.querySelector('.btn-change-cat');
   categoryCooldownRemaining = 30;
+  const btn = document.getElementById('btn-change-cat') || document.querySelector('.btn-change-cat');
   
   if (btn) {
     btn.disabled = true;
@@ -337,11 +333,13 @@ function startCategoryCooldownTimer() {
     btn.innerText = `⏳ ATTENDI ${categoryCooldownRemaining}S PER CAMBIARE`;
   }
 
-  if (categoryCooldownTimer) clearInterval(categoryCooldownTimer);
+  if (categoryCooldownTimer) {
+    clearInterval(categoryCooldownTimer);
+  }
 
   categoryCooldownTimer = setInterval(() => {
     categoryCooldownRemaining--;
-    const currentBtn = document.querySelector('.btn-change-cat');
+    const currentBtn = document.getElementById('btn-change-cat') || document.querySelector('.btn-change-cat');
     
     if (categoryCooldownRemaining <= 0) {
       clearInterval(categoryCooldownTimer);
@@ -357,6 +355,7 @@ function startCategoryCooldownTimer() {
     }
   }, 1000);
 }
+
 function handleBotPlay(card, word) {
   if (wordsPlayedOnCard >= MAX_WORDS) return;
   bot.hand = bot.hand.filter(c => c.id !== card.id);
