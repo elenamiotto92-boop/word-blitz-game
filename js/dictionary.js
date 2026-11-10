@@ -432,6 +432,14 @@ const DICTIONARY = {
   "LO TROVI IN ACQUA": [],
   "UN SENTIMENTO": [],
   "QUANDO SEI GIÙ DI MORALE": []
+  "CITTà EUROPEE": []
+  "NEGLI USA": []
+  "LO DICI A LAVORO": []
+  "IN ASIA": []
+  "NELLA GIUNGLA": []
+  "IN AFRICA": []
+  "QUANDO LO VEDO DIVENTA UNA BELLA GIORNATA": []
+  "QUANDO LO VEDO DIVENTA UNA BRUTTA GIORNATA": []
 };
 
 // Funzione globale per la validazione automatica (Semplificata per il nuovo formato)
