@@ -161,6 +161,11 @@ function setupSupabaseListener() {
       const stage = document.getElementById('center-stage');
       if (stage) stage.style.display = 'none';
       renderHand();
+
+      // Sincronizza il timer dei 30s anche sull'altro telefono che riceve il cambio!
+      if (typeof startCategoryCooldownTimer === 'function') {
+        startCategoryCooldownTimer();
+      }
     }
 
     if (data.type === 'ROUND_OVER') {
