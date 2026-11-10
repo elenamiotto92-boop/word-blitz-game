@@ -440,6 +440,7 @@ const DICTIONARY = {
   "IN AFRICA": []
   "QUANDO LO VEDO DIVENTA UNA BELLA GIORNATA": []
   "QUANDO LO VEDO DIVENTA UNA BRUTTA GIORNATA": []
+  "UNA PIZZA": []
 };
 
 // Funzione globale per la validazione automatica (Semplificata per il nuovo formato)
