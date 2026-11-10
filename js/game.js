@@ -11,6 +11,7 @@ let availableCategories = [];
 let wordsPlayedOnCard = 0;
 let playerHand = [];
 let playerLightnings = 0;
+let playedWordsList = [];
 const bot = typeof BotPlayer !== 'undefined' ? new BotPlayer() : null;
 
 // Gestione Cooldown Cambio Categoria
@@ -109,6 +110,7 @@ function startMultiplayerGame(initialCategory) {
 }
 
 function nextCategoryCard() {
+  playedWordsList = [];
   wordsPlayedOnCard = 0;
   const playedEl = document.getElementById('played-words');
   if (playedEl) playedEl.innerHTML = "";
@@ -157,6 +159,10 @@ function renderHand() {
 }
 
 function registerWordPlay(word, isPlayer = true, customName = null) {
+  const upperWord = word.toUpperCase();
+  if (!playedWordsList.includes(upperWord)) {
+    playedWordsList.push(upperWord);
+  }
   wordsPlayedOnCard++;
   const countEl = document.getElementById('words-count');
   if (countEl) countEl.innerText = wordsPlayedOnCard;
@@ -224,6 +230,14 @@ function processPlayerWord(typedWord) {
   const errorMsg = document.getElementById('error-msg');
   if (errorMsg) errorMsg.innerText = "";
   if (!typedWord || wordsPlayedOnCard >= MAX_WORDS) return;
+
+  const upperWord = typedWord.trim().toUpperCase();
+
+  // 👇 Controllo: se la parola è già stata detta, blocca e la carta resta in mano
+  if (playedWordsList.includes(upperWord)) {
+    if (errorMsg) errorMsg.innerText = "Già detto!";
+    return;
+  }
 
   const firstLetter = typedWord.charAt(0);
   const cardIndex = playerHand.findIndex(card => card.letter === firstLetter);
