@@ -8,9 +8,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Word Blitz">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
   <title>Word Blitz - GitHub Edition</title>
-  <link rel="stylesheet" href="css/style.css?v=99">
+  <link rel="stylesheet" href="css/style.css?v=202">
 </head>
 <body>
 
@@ -81,7 +81,7 @@
         </div>
       </div>
 
-     <section class="player-area">
+      <section class="player-area">
         <h3>LA TUA MANO</h3>
         <div id="player-hand" class="hand"></div>
         
@@ -102,19 +102,26 @@
           <div id="error-msg" class="error-msg"></div>
         </div>
 
-        <!-- 👇 Tasto spostato fuori! Ora è sempre visibile e ha la scritta giusta -->
         <button onclick="changeCategoryWithPenalty()" class="btn-change-cat" style="width: 100%; margin-top: 10px;">🔄 CAMBIA CATEGORIA (+1 CARTA A TESTA)</button>
         
       </section>
     </main>
   </div>
         
+  <!-- CARICAMENTO SCRIPT NELL'ORDINE CORRETTO -->
   <script src="js/dictionary.js"></script>
   <script src="js/bot.js"></script>
-  <script src="js/game.js?v=200"></script>
-  <script src="js/network.js?v=200"></script>
+  <script src="js/network.js?v=202"></script>
+  <script src="js/game.js?v=202"></script>
 
   <!-- MODALE FINE PARTITA (VITTORIA / SCONFITTA) -->
   <div id="game-over-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
     <div style="background: #e8e2d5; padding: 25px; border-radius: 12px; text-align: center; max-width: 350px; width: 90%; border: 3px solid #b45309; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
-      <h2 id="modal-title" style="font
+      <h2 id="modal-title" style="font-size: 1.8rem; margin-bottom: 10px; color: #78350f;">🏆 FINE PARTITA 🏆</h2>
+      <p id="modal-message" style="font-size: 0.95rem; color: #443833; margin-bottom: 20px; font-weight: bold; line-height: 1.4;"></p>
+      <button onclick="location.reload()" style="background: #9a3412; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer;">Nuova Partita</button>
+    </div>
+  </div>
+
+</body>
+</html>
