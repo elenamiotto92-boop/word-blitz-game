@@ -80,7 +80,12 @@ function startGameScreen() {
     setupDataListener();
   }
 }
-
+// Aggiungi dentro startGameScreen() dopo l'event listener della tastiera:
+wordInput.addEventListener('focus', () => {
+  setTimeout(() => {
+    wordInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 300);
+});
 function startSinglePlayer() {
   if (typeof DICTIONARY === 'undefined') return alert("Dizionario non caricato!");
   startGameScreen();
@@ -281,8 +286,18 @@ function contestLastPlay() {
     if (errorMsg) errorMsg.innerText = "Hai contestato! L'avversario pesca +1 carta.";
   }
 }
+// Variable per il cooldown del cambio categoria
+let categoryCooldownTimer = null;
+let categoryCooldownRemaining = 0;
 
 function changeCategoryWithPenalty() {
+  // Blocco se il timer da 30s è ancora attivo
+  if (categoryCooldownRemaining > 0) {
+    const errorMsg = document.getElementById('error-msg');
+    if (errorMsg) errorMsg.innerText = `⏳ Attendi ancora ${categoryCooldownRemaining}s per cambiare categoria!`;
+    return;
+  }
+
   const penaltyCardPlayer = LETTERS_POOL[Math.floor(Math.random() * LETTERS_POOL.length)];
   playerHand.push({ ...penaltyCardPlayer, id: Math.random() });
   renderHand();
@@ -306,8 +321,42 @@ function changeCategoryWithPenalty() {
   if (errorMsg) errorMsg.innerText = "Categoria cambiata! +1 carta a testa.";
 
   nextCategoryCard();
+
+  // Avvia il conto alla rovescia di 30 secondi
+  startCategoryCooldownTimer();
 }
 
+function startCategoryCooldownTimer() {
+  const btn = document.querySelector('.btn-change-cat');
+  categoryCooldownRemaining = 30;
+  
+  if (btn) {
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'not-allowed';
+    btn.innerText = `⏳ ATTENDI ${categoryCooldownRemaining}S PER CAMBIARE`;
+  }
+
+  if (categoryCooldownTimer) clearInterval(categoryCooldownTimer);
+
+  categoryCooldownTimer = setInterval(() => {
+    categoryCooldownRemaining--;
+    const currentBtn = document.querySelector('.btn-change-cat');
+    
+    if (categoryCooldownRemaining <= 0) {
+      clearInterval(categoryCooldownTimer);
+      categoryCooldownTimer = null;
+      if (currentBtn) {
+        currentBtn.disabled = false;
+        currentBtn.style.opacity = '1';
+        currentBtn.style.cursor = 'pointer';
+        currentBtn.innerText = "🔄 CAMBIA CATEGORIA (+1 CARTA A TESTA)";
+      }
+    } else if (currentBtn) {
+      currentBtn.innerText = `⏳ ATTENDI ${categoryCooldownRemaining}S PER CAMBIARE`;
+    }
+  }, 1000);
+}
 function handleBotPlay(card, word) {
   if (wordsPlayedOnCard >= MAX_WORDS) return;
   bot.hand = bot.hand.filter(c => c.id !== card.id);
