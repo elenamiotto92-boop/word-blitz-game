@@ -147,7 +147,7 @@ function setupSupabaseListener() {
       if (errorMsg) errorMsg.innerText = "L'avversario ha cambiato categoria! +1 carta.";
     }
 
-    if (data.type === 'CHANGE_CATEGORY_ONLY') {
+if (data.type === 'CHANGE_CATEGORY_ONLY') {
       if (typeof syncCategory === 'function') syncCategory(data.category);
       else window.currentCategory = data.category;
       
@@ -162,7 +162,7 @@ function setupSupabaseListener() {
       if (stage) stage.style.display = 'none';
       renderHand();
 
-      // Sincronizza il timer dei 30s anche sull'altro telefono che riceve il cambio!
+      // Fai partire il timer di blocco anche sul dispositivo che riceve il cambio
       if (typeof startCategoryCooldownTimer === 'function') {
         startCategoryCooldownTimer();
       }
